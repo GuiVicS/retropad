@@ -36,43 +36,149 @@ retropad/
 └── README.md
 ```
 
-## Instalação no Raspberry
+## Instalação e inicialização automática no Raspberry Pi
+
+Execute os comandos abaixo no terminal do Raspberry Pi. Se o repositório já foi baixado, comece pela etapa 2.
+
+### 1. Baixar o projeto
 
 ```bash
 sudo apt update
-sudo apt install -y python3-venv python3-pip git
-
+sudo apt install -y git python3-venv python3-pip python3-dev build-essential
 cd ~
-git clone https://github.com/GuiVicS/retropad.git retropad
+git clone https://github.com/GuiVicS/retropad.git
 cd ~/retropad
-
-python3 -m venv venv
-./venv/bin/pip install -r requirements.txt
 ```
 
-### Permissão para o uinput
+### 2. Instalar as dependências Python
+
+O ambiente virtual precisa conter o `pip`; instale os pacotes do sistema e recrie-o antes de instalar os requisitos:
+
+```bash
+sudo apt install -y python3-venv python3-pip python3-dev build-essential
+cd ~/retropad
+python3 -m venv --clear venv
+./venv/bin/python -m pip install --upgrade pip
+./venv/bin/python -m pip install -r requirements.txt
+```
+
+Se sua pasta do projeto não for `~/retropad`, use o caminho onde o clonou nos comandos.
+
+### 3. Habilitar o dispositivo de controle virtual
+
+O RetroPad precisa acessar o dispositivo Linux `uinput`. Configure o módulo e as permissões:
 
 ```bash
 sudo modprobe uinput
-echo uinput | sudo tee -a /etc/modules-load.d/uinput.conf
-
-echo 'KERNEL=="uinput", MODE="0660", GROUP="input", OPTIONS+="static_node=uinput"' \
+printf 'uinput\n' | sudo tee /etc/modules-load.d/uinput.conf
+printf 'KERNEL=="uinput", MODE="0660", GROUP="input", OPTIONS+="static_node=uinput"\n' \
   | sudo tee /etc/udev/rules.d/99-uinput.rules
-sudo udevadm control --reload-rules && sudo udevadm trigger
-sudo usermod -aG input $USER    # depois faça logout/login
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+sudo usermod -aG input "$(whoami)"
 ```
 
-Para o primeiro teste, você pode rodar com `sudo` se a permissão falhar.
-
-## Rodando
+Reinicie o Raspberry Pi para aplicar a associação ao grupo:
 
 ```bash
+sudo reboot
+```
+
+Depois de reconectar pelo terminal, confirme que o dispositivo existe:
+
+```bash
+ls -l /dev/uinput
+```
+
+### 4. Iniciar e testar manualmente
+
+```bash
+cd ~/retropad
 RETROPAD_PIN=1234 ./venv/bin/python server.py
 ```
 
-No celular (mesma Wi-Fi), abra `http://IP_DO_RASPBERRY:8080`. Descubra o IP com `hostname -I`.
+Deixe esse terminal aberto. Descubra o endereço do Raspberry com `hostname -I`; no celular conectado à mesma rede Wi-Fi, acesse `http://IP_DO_RASPBERRY:8080` e digite o PIN `1234`. Para interromper o servidor, pressione **Ctrl+C**.
 
-Para ver os gamepads criados, em outro terminal: `ls /dev/input/by-id/` ou `sudo evtest`.
+Se aparecer `No module named pip` ou `No module named evdev`, repita a etapa 2. Se aparecer erro de permissão em `/dev/uinput`, confirme que reiniciou após entrar no grupo `input` e verifique `ls -l /dev/uinput`.
+
+### 5. Configurar a inicialização automática
+
+Primeiro, confirme o nome do usuário e o caminho da pasta pessoal:
+
+```bash
+whoami
+echo "$HOME"
+```
+
+Crie um arquivo para os PINs e limite o acesso a ele:
+
+```bash
+sudo nano /etc/retropad.env
+```
+
+Adicione as linhas abaixo, trocando os PINs de exemplo por valores próprios:
+
+```ini
+RETROPAD_PIN=troque-por-um-pin
+RETROPAD_ADMIN_PIN=troque-por-outro-pin
+```
+
+`RETROPAD_ADMIN_PIN` protege o gerenciador de ROMs em `/admin`. Se omitido, ele usa o mesmo PIN do controle. Salve no `nano` com **Ctrl+O**, **Enter** e saia com **Ctrl+X**. Depois proteja o arquivo:
+
+```bash
+sudo chown root:root /etc/retropad.env
+sudo chmod 600 /etc/retropad.env
+```
+
+Crie o serviço:
+
+```bash
+sudo nano /etc/systemd/system/retropad.service
+```
+
+Cole o conteúdo a seguir. Se `whoami` ou `echo "$HOME"` mostrou valores diferentes de `pi` e `/home/pi`, ajuste `User`, `WorkingDirectory` e `ExecStart` para os valores reais. Por exemplo, para o usuário `joao`, substitua `/home/pi` por `/home/joao`.
+
+```ini
+[Unit]
+Description=RetroPad
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/retropad
+EnvironmentFile=/etc/retropad.env
+ExecStart=/home/pi/retropad/venv/bin/python server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Salve e ative o serviço para iniciar agora e também a cada inicialização do Raspberry:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now retropad
+sudo systemctl status retropad
+```
+
+Para acompanhar os logs:
+
+```bash
+sudo journalctl -u retropad -f
+```
+
+Agora o celular pode acessar `http://IP_DO_RASPBERRY:8080` mesmo sem abrir uma sessão de terminal. Para parar, iniciar ou reiniciar o serviço:
+
+```bash
+sudo systemctl stop retropad
+sudo systemctl start retropad
+sudo systemctl restart retropad
+```
+
+`systemctl status retropad` mostra se o serviço está ativo. Para verificar o endereço do Raspberry, rode `hostname -I`.
 
 ## Configurando o RetroArch
 
@@ -161,46 +267,15 @@ Isso cria **RetroPad** (status e endereços), **RetroPad Iniciar** e **RetroPad 
 ## Testes
 
 ```bash
-./venv/bin/pip install -r requirements-dev.txt
+./venv/bin/python -m pip install -r requirements-dev.txt
 ./venv/bin/python -m pytest -q
 ```
 
 Cobrem nomes, extensões, path traversal, limite de tamanho, espaço livre, assinaturas, PIN e bloqueio, túnel (com ngrok simulado), manifest e service worker. O que depende do hardware real (uinput, RetroArch, ngrok de verdade, cartão SD) precisa de teste manual no Raspberry.
 
-## Serviço systemd (iniciar com o Raspberry)
+## Serviço systemd
 
-Crie `/etc/systemd/system/retropad.service`:
-
-```ini
-[Unit]
-Description=RetroPad
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-User=pi
-WorkingDirectory=/home/pi/retropad
-Environment=RETROPAD_PIN=1234
-Environment=RETROPAD_ADMIN_PIN=5678
-Environment=RETROPAD_ROMS=/home/pi/RetroPie/roms
-# Túnel ngrok (opcional, veja "PWA e ngrok"):
-# Environment=RETROPAD_NGROK=1
-# Environment=RETROPAD_NGROK_AUTHTOKEN=SEU_TOKEN
-# Environment=RETROPAD_NGROK_DOMAIN=meu-retropad.ngrok-free.app
-ExecStart=/home/pi/retropad/venv/bin/python server.py
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Ajuste `User` e os caminhos para o seu usuário. Depois:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now retropad
-journalctl -u retropad -f
-```
+Para instalar e configurar o serviço para iniciar junto com o Raspberry, siga a [etapa de inicialização automática](#5-configurar-a-inicialização-automática) do guia de instalação acima.
 
 ## Instalando como app no celular
 
