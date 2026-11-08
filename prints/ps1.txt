@@ -1,0 +1,14 @@
+RETROPAD - LAYOUT PS1
+       =====================
+    D-PAD
+       ▲
+    ←     →
+       ▼
+
+      [ ABXY ]
+       X O □ △
+
+    L1     R1    L3    R3
+    L2          R2
+
+    (Dois analógicos visuais com ponto de follow aparecem lateralmente)

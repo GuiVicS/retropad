@@ -1,0 +1,15 @@
+RETROPAD - LAYOUT N64
+       =====================
+    Analogico(esquerdo)
+                   ↑
+                   A
+                   B
+
+    Z                    ↑
+                   B
+                   ↓
+
+    Analogico(direito)
+
+    C-butrais [←] [↑] [→]
+                 START

@@ -1,0 +1,18 @@
+RETROPAD - MODO MOUSE
+       =====================
+    [ CLIQUE ]   [ CLIQUE DIR ]
+                        [ ROLAGEM ]
+
+    +------------------------------+
+    |                              |
+    |     ╭────────────────────╮     |
+    |     │                        │     |
+    |     │  ARRASTE PARA MOVER    │     |
+    |     │                        │     |
+    |     ╰────────────────────╯     |
+    |                              |
+    |  Cursor do mouse segue o toque|
+    |  Toque arrasta para mover    |
+    +------------------------------+
+
+    Botões de clique fixos na parte inferior

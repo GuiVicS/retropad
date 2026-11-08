@@ -1,0 +1,11 @@
+RETROPAD - LAYOUT NES
+       =====================
+    D-PAD
+       ▲
+    ←     →
+       ▼
+
+      [ ABXY ]
+       X Y B A
+
+    SELECT START

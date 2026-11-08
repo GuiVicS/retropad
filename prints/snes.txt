@@ -1,0 +1,12 @@
+RETROPAD - LAYOUT SNES/GENESIS
+       =====================
+    D-PAD
+       ▲
+    ←     →
+       ▼
+
+      [ ABXY ]
+       X Y B A
+
+    L           R
+ SELECT           START
