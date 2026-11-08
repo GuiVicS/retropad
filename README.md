@@ -40,6 +40,18 @@ retropad/
 
 Execute os comandos abaixo no terminal do Raspberry Pi. Se o repositório já foi baixado, comece pela etapa 2.
 
+#### Se `apt update` falhar com erro 404 no RetroPie Buster
+
+O Raspberry Pi OS Buster foi arquivado, então o espelho Raspbian original pode não estar mais disponível. **Só no Buster**, aponte o arquivo de fontes para o espelho oficial arquivado, antes de instalar os pacotes:
+
+```bash
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+sudo sed -i 's|raspbian.raspberrypi.org/raspbian|legacy.raspbian.org/raspbian|g' /etc/apt/sources.list
+sudo apt update
+```
+
+Esse espelho contém pacotes antigos e não recebe atualizações de segurança do Buster. Não use `apt upgrade` como tentativa de atualizar a distribuição; prefira planejar a migração do RetroPie com backup.
+
 ### 1. Baixar o projeto
 
 ```bash

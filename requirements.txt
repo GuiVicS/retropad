@@ -1,4 +1,6 @@
-flask>=3.0
+Flask>=3.0; python_version >= "3.8"
+Flask==2.2.5; python_version < "3.8"
 flask-sock>=0.7
 evdev>=1.6
-pyngrok>=7.0   # túnel ngrok (opcional; só é importado com RETROPAD_NGROK=1)
+pyngrok>=7.0; python_version >= "3.8"  # túnel ngrok opcional
+pyngrok==7.0.0; python_version < "3.8"  # última versão compatível com Python 3.7
