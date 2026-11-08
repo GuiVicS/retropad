@@ -1,0 +1,123 @@
+/* Componentes do gerenciador. Só usa variáveis definidas em theme.css. */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { background: var(--bg); }
+body {
+  margin: 0; min-height: 100vh;
+  background: var(--bg); color: var(--text);
+  font-family: var(--font); letter-spacing: var(--tracking-normal);
+  line-height: 1.45;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.hidden { display: none !important; }
+h1 { font-size: 1.6rem; margin: 20px 0 12px; letter-spacing: -0.03em; }
+h2 { margin: 0 0 8px; font-size: 1.2rem; }
+a { color: inherit; }
+.muted { color: var(--muted-foreground); }
+.small { font-size: 0.85rem; margin: 10px 0 0; }
+.msg { min-height: 1.3em; margin: 10px 0 0; font-weight: 600; }
+.msg.error { color: var(--danger-text); }
+
+main { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row.between { justify-content: space-between; }
+.row.wrap { flex-wrap: wrap; }
+.row.end { justify-content: flex-end; margin-top: 16px; }
+
+/* Topo */
+.top {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: var(--primary); color: var(--primary-foreground);
+  border-bottom: 3px solid var(--border);
+}
+.brand { font-weight: 800; font-size: 1.25rem; text-decoration: none; letter-spacing: -0.03em; }
+.brand span { background: var(--foreground); color: var(--background); padding: 1px 10px; border-radius: 999px; font-size: 0.9rem; margin-left: 4px; }
+.top-actions { display: flex; gap: 8px; }
+
+/* Cartões e botões */
+.card {
+  background: var(--card); color: var(--card-foreground);
+  border: 2px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-md); padding: 16px 20px; margin-bottom: 20px;
+}
+.card.narrow { max-width: 420px; margin: 40px auto; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font: inherit; font-weight: 700; cursor: pointer; text-decoration: none;
+  min-height: 44px; padding: 8px 20px;
+  background: var(--secondary); color: var(--secondary-foreground);
+  border: 2px solid var(--border); border-radius: 999px; box-shadow: var(--shadow-sm);
+  transition: transform 0.06s, box-shadow 0.06s;
+}
+.btn:active { transform: translate(3px, 3px); box-shadow: none; }
+.btn:focus-visible, input:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+.btn.primary { background: var(--primary); color: var(--primary-foreground); }
+.btn.danger { background: var(--destructive); color: var(--destructive-foreground); }
+.btn.ghost { background: var(--card); color: var(--card-foreground); box-shadow: none; min-height: 38px; padding: 4px 14px; }
+.top .btn.ghost { background: var(--background); color: var(--foreground); }
+.btn.icon { padding: 4px 0; width: 38px; font-size: 1.1rem; }
+.btn.small { min-height: 36px; padding: 4px 14px; font-size: 0.9rem; box-shadow: 2px 2px 0 var(--shadow-color); }
+.btn.file input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.btn.file { position: relative; }
+
+input[type="text"], input[type="password"], input[type="search"] {
+  width: 100%; font: inherit; min-height: 46px; padding: 8px 18px;
+  background: var(--input); color: var(--foreground);
+  border: 2px solid var(--border); border-radius: 999px;
+}
+#login-form { display: grid; gap: 12px; margin-top: 12px; }
+
+/* Espaço em disco */
+.meter { height: 16px; margin-top: 10px; border: 2px solid var(--border); border-radius: 999px; background: var(--input); overflow: hidden; }
+.meter > div { height: 100%; width: 0; background: var(--primary); transition: width 0.3s; }
+.meter.low > div { background: var(--destructive); }
+
+/* Sistemas */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+.sys {
+  text-align: left; font: inherit; color: inherit; cursor: pointer;
+  background: var(--card); border: 2px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-md); padding: 14px 20px; display: grid; gap: 2px;
+}
+.sys:active { transform: translate(4px, 4px); box-shadow: none; }
+.sys b { font-size: 1.05rem; }
+.sys.unconfigured { opacity: 0.6; }
+
+/* Fila de envio */
+.queue { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.queue li { border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; background: var(--input); }
+.queue .name { font-weight: 600; overflow-wrap: anywhere; }
+.queue .state { font-size: 0.85rem; }
+.queue .state.err { color: var(--danger-text); font-weight: 700; }
+.queue .state.done { color: var(--foreground); font-weight: 700; }
+.bar { height: 12px; margin-top: 6px; border: 2px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--background); }
+.bar > div { height: 100%; width: 0; background: var(--chart-2); transition: width 0.15s; }
+
+/* Lista de ROMs */
+.list { list-style: none; margin: 8px 0 0; padding: 0; }
+.list li { display: grid; gap: 8px; padding: 12px 0; border-top: 2px dashed var(--muted); }
+.list li:first-child { border-top: 0; }
+.list .name { font-weight: 600; overflow-wrap: anywhere; }
+.list .meta { color: var(--muted-foreground); font-size: 0.85rem; }
+.list .actions { display: flex; gap: 8px; }
+.empty { text-align: center; padding: 24px 8px; color: var(--muted-foreground); font-weight: 600; }
+
+/* Diálogo e aviso */
+dialog {
+  width: min(92vw, 440px); padding: 20px 24px; color: var(--popover-foreground); background: var(--popover);
+  border: 3px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-xl);
+}
+dialog::backdrop { background: rgb(0 0 0 / 0.55); }
+dialog p { overflow-wrap: anywhere; }
+#toast { position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); display: grid; gap: 8px; justify-items: center; pointer-events: none; z-index: 20; }
+#toast div {
+  max-width: 520px; padding: 10px 20px; font-weight: 700;
+  background: var(--foreground); color: var(--background);
+  border: 2px solid var(--border); border-radius: 999px; box-shadow: var(--shadow-md);
+}
+#toast div.err { background: var(--destructive); color: var(--destructive-foreground); }
+
+@media (min-width: 560px) {
+  .list li { grid-template-columns: 1fr auto; align-items: center; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

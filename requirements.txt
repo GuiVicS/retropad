@@ -1,0 +1,4 @@
+flask>=3.0
+flask-sock>=0.7
+evdev>=1.6
+pyngrok>=7.0   # túnel ngrok (opcional; só é importado com RETROPAD_NGROK=1)

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#a855f7">
+<title>RetroPad · ROMs</title>
+<link rel="manifest" href="/static/manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RetroPad">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="/admin">RetroPad <span>ROMs</span></a>
+  <div class="top-actions">
+    <button class="btn ghost hidden" data-install type="button">⬇ Instalar</button>
+    <a class="btn ghost" href="/">Controle</a>
+    <button class="btn ghost icon" id="theme" type="button" aria-label="Alternar tema">◐</button>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- Entrada com PIN -->
+  <section id="login" class="card narrow hidden">
+    <h1>Entrar</h1>
+    <p class="muted">Digite o PIN de administrador do RetroPad.</p>
+    <form id="login-form">
+      <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="PIN" required>
+      <button class="btn primary" type="submit">Entrar</button>
+    </form>
+    <p id="login-msg" class="msg error" role="alert"></p>
+  </section>
+
+  <!-- Sistemas e espaço livre -->
+  <section id="systems" class="hidden">
+    <div class="card" id="disk">
+      <div class="row between"><strong>Cartão SD</strong><span id="disk-text" class="muted"></span></div>
+      <div class="meter"><div id="disk-bar"></div></div>
+      <p id="tunnel" class="muted small hidden"></p>
+    </div>
+    <h1>Sistemas</h1>
+    <div id="systems-list" class="grid"></div>
+  </section>
+
+  <!-- ROMs de um sistema -->
+  <section id="roms" class="hidden">
+    <div class="row">
+      <button class="btn ghost" id="back" type="button">← Sistemas</button>
+    </div>
+    <h1 id="roms-title"></h1>
+
+    <div class="card">
+      <div class="row between wrap">
+        <label class="btn primary file">
+          Enviar ROMs
+          <input id="file" type="file" multiple>
+        </label>
+        <span id="disk-mini" class="muted"></span>
+      </div>
+      <p class="muted small" id="accepted"></p>
+      <ul id="queue" class="queue"></ul>
+    </div>
+
+    <div class="card">
+      <input id="filter" type="search" placeholder="Buscar pelo nome…" autocomplete="off">
+      <p id="count" class="muted small"></p>
+      <ul id="roms-list" class="list"></ul>
+      <p id="roms-empty" class="empty hidden"></p>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <form method="dialog" id="dlg-form">
+    <h2 id="dlg-title"></h2>
+    <p id="dlg-text"></p>
+    <input id="dlg-input" class="hidden" type="text" autocomplete="off">
+    <div class="row end">
+      <button class="btn ghost" value="cancel" type="submit" id="dlg-cancel">Cancelar</button>
+      <button class="btn primary" value="ok" type="submit" id="dlg-ok">OK</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="/static/app.js"></script>
+<script src="/static/pwa.js" defer></script>
+</body>
+</html>
