@@ -61,6 +61,10 @@
   .tile small { font-weight: 600; font-size: 0.74rem; color: var(--muted); line-height: 1.2; }
   .tile.on { background: linear-gradient(180deg, var(--brown), var(--brown-d)); color: var(--on-brown); }
   .tile.on .i, .tile.on small { color: var(--on-brown); }
+  a.tile { text-decoration: none; color: inherit; }
+  .fn-title { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 800; }
+  .fn-title .i { width: 1.5em; height: 1.5em; color: var(--brown); }
+  #fn { display: flex; flex-direction: column; align-items: center; gap: 14px; }
   .who { display: flex; flex-direction: column; align-items: center; gap: 10px; }
   .who > span { font-weight: 700; color: var(--muted); font-size: 0.9rem; }
   .cta.last { outline: 3px solid color-mix(in oklab, var(--brown) 45%, transparent); outline-offset: 2px; }
@@ -250,22 +254,27 @@
   <input id="pin" type="password" inputmode="numeric" placeholder="PIN (se houver)" autocomplete="off" aria-label="PIN">
 
   <div class="launch" id="launch" role="group" aria-label="Como você quer usar">
-    <button type="button" class="tile soft" data-mode="gamepad"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg>Gamepad<small>jogador 1 ou 2</small></button>
-    <button type="button" class="tile soft" data-mode="mouse"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#mouse-pointer-2"/></svg>Mouse<small>touchpad e teclado</small></button>
-    <button type="button" class="tile soft" data-mode="screen"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#monitor-play"/></svg>Tela<small>ver e controlar</small></button>
+    <a href="/gamepad" class="tile soft" data-route="gamepad"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg>Gamepad<small>jogador 1 ou 2</small></a>
+    <a href="/mouse" class="tile soft" data-route="mouse"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#mouse-pointer-2"/></svg>Mouse<small>touchpad e teclado</small></a>
+    <a href="/tela" class="tile soft" data-route="tela"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#monitor-play"/></svg>Tela<small>ver e controlar</small></a>
   </div>
 
-  <div class="who hidden" id="players">
-    <span>Qual jogador você é?</span>
-    <div class="players">
-      <button type="button" class="cta" id="p1">Jogador 1</button>
-      <button type="button" class="cta" id="p2">Jogador 2</button>
+  <div id="fn" class="hidden">
+    <div class="fn-title"><span id="fnIcon"></span><span id="fnName"></span></div>
+    <div class="who hidden" id="players">
+      <span>Qual jogador você é?</span>
+      <div class="players">
+        <button type="button" class="cta" id="p1">Jogador 1</button>
+        <button type="button" class="cta" id="p2">Jogador 2</button>
+      </div>
     </div>
+    <button type="button" class="cta hidden" id="connect"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#log-in"/></svg> Conectar</button>
+    <a href="/" class="link-btn" id="back"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#arrow-left"/></svg> Início</a>
   </div>
   <div id="status" role="status"></div>
 
   <div class="join-links">
-    <a href="/admin">Gerenciar ROMs</a>
+    <a href="/roms">Gerenciar ROMs</a>
     <button id="openSettings" class="link-btn" type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#settings"/></svg> Configurações</button>
     <button class="link-btn hidden" data-install type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#download"/></svg> Instalar app</button>
   </div>
@@ -370,16 +379,47 @@ RPConfig.load().then(() => {
   const buzz = () => { try { if (cfg.get('vibrate') && navigator.vibrate) navigator.vibrate(8); } catch (_) {} };
 
   // ---------- Tela de entrada ----------
+  // ---------- Rotas: uma por função (/gamepad, /mouse, /tela, /config) ----------
+  const ROUTES = {
+    '/gamepad': { mode: 'gamepad', name: 'Gamepad', icon: 'gamepad-2' },
+    '/mouse': { mode: 'mouse', name: 'Mouse e teclado', icon: 'mouse-pointer-2' },
+    '/tela': { mode: 'screen', name: 'Tela do sistema', icon: 'monitor-play' },
+  };
+  const routeOf = () => ROUTES[location.pathname.replace(/\/+$/, '')] || null;
+  function navigate(path, replace) {
+    if (location.pathname !== path) history[replace ? 'replaceState' : 'pushState']({}, '', path);
+    render();
+  }
   function paintJoin() {
-    document.querySelectorAll('#launch .tile').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode && !$('players').classList.contains('hidden')));
     document.querySelectorAll('#players .cta').forEach((b) => b.classList.toggle('last', Number(b.id.slice(1)) === cfg.get('player')));
   }
-  // Mouse e Tela conectam direto (não usam jogador). Só o Gamepad pede para escolher Jogador 1 ou 2.
-  document.querySelectorAll('#launch .tile').forEach((b) => b.addEventListener('click', () => {
-    mode = b.dataset.mode; cfg.set('mode', mode);
-    if (mode === 'gamepad') { $('players').classList.remove('hidden'); paintJoin(); }
-    else { $('players').classList.add('hidden'); paintJoin(); startJoin(null); }
+  // Mostra o que o endereço pede: a entrada (/), a conexão de uma função ou as configurações (/config).
+  function render() {
+    const path = location.pathname.replace(/\/+$/, '') || '/';
+    const r = routeOf();
+    document.title = r ? `RetroPad · ${r.name}` : 'RetroPad';
+    if (inGame && (!r || r.mode !== mode)) leaveGame(true);          // botão "voltar" do celular
+    if (path === '/config') { openSettings(); } else if (!$('settings').classList.contains('hidden') && !inGame) closeSettings(true);
+    $('launch').classList.toggle('hidden', !!r);
+    $('fn').classList.toggle('hidden', !r);
+    if (r) {
+      mode = r.mode;
+      $('fnIcon').innerHTML = ico(r.icon); $('fnName').textContent = r.name;
+      const gp = mode === 'gamepad';
+      $('players').classList.toggle('hidden', !gp);
+      $('connect').classList.toggle('hidden', gp);
+      paintJoin();
+    }
+  }
+  // Mouse e Tela conectam direto (não usam jogador). O Gamepad pede para escolher Jogador 1 ou 2.
+  document.querySelectorAll('#launch .tile').forEach((a) => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    navigate(a.getAttribute('href'));
+    if (mode !== 'gamepad') startJoin(null);
   }));
+  $('back').addEventListener('click', (e) => { e.preventDefault(); navigate('/'); });
+  $('connect').addEventListener('click', () => startJoin(null));
+  window.addEventListener('popstate', render);
 
   // ---------- Conexão ----------
   function connect() {
@@ -407,7 +447,7 @@ RPConfig.load().then(() => {
   }
   function startJoin(p) {
     player = p; retry = true; setStatus('Conectando…');
-    if (p) cfg.set('player', p);
+    cfg.set('mode', mode); if (p) cfg.set('player', p);
     try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); } catch (_) {}
     connect();
   }
@@ -426,7 +466,7 @@ RPConfig.load().then(() => {
     fit();
     if (mode === 'screen' || cfg.get('stream')) startStream();
   }
-  function leaveGame() {
+  function leaveGame(fromRoute) {
     retry = false; inGame = false;
     pressed.clear(); lastPad = '';
     if (streaming) wsSend({ t: 'stream', on: false });   // para o vídeo antes de fechar o socket
@@ -436,6 +476,7 @@ RPConfig.load().then(() => {
     kb.blur();
     padEl.classList.add('hidden'); joinEl.classList.remove('hidden');
     document.body.classList.remove('game');
+    if (!fromRoute) navigate('/');
   }
 
   // O teclado do celular encolhe a tela: acompanhamos a área realmente visível.
@@ -464,9 +505,12 @@ RPConfig.load().then(() => {
     resetClearButton();
   }
   function openSettings() { paintSettings(); $('sheetBack').classList.remove('hidden'); $('settings').classList.remove('hidden'); }
-  function closeSettings() { $('settings').classList.add('hidden'); if ($('menu').classList.contains('hidden')) $('sheetBack').classList.add('hidden'); resetClearButton(); }
-  $('openSettings').addEventListener('click', openSettings);
-  $('setClose').addEventListener('click', closeSettings);
+  function closeSettings(fromRoute) {
+    $('settings').classList.add('hidden'); if ($('menu').classList.contains('hidden')) $('sheetBack').classList.add('hidden'); resetClearButton();
+    if (fromRoute !== true && location.pathname === '/config') navigate('/', true);
+  }
+  $('openSettings').addEventListener('click', () => navigate('/config'));
+  $('setClose').addEventListener('click', () => closeSettings());
   document.querySelectorAll('#themeSeg button').forEach((b) => b.addEventListener('click', () => { cfg.set('theme', b.dataset.themeV); paintSettings(); }));
   $('setVib').addEventListener('click', () => { cfg.set('vibrate', !cfg.get('vibrate')); paintSettings(); buzz(); });
   $('setSens').addEventListener('input', (e) => { cfg.set('sensitivity', Number(e.target.value)); $('sensVal').textContent = Number(e.target.value).toFixed(1) + '×'; });
@@ -747,7 +791,7 @@ RPConfig.load().then(() => {
     e.preventDefault(); wsSend({ t: 'key', key: name, mods: takeMods() });
   });
 
-  paintJoin();
+  render();
   paintStream();
 });
 </script>

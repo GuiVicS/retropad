@@ -84,24 +84,68 @@ input::placeholder { color: var(--muted); }
 .sys b .i { color: var(--brown); }
 .sys.unconfigured { opacity: 0.6; }
 
-/* Fila de envio */
-.queue { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
-.queue li { border: 1.5px solid var(--line); border-radius: 16px; padding: 10px 14px; background: var(--hi); box-shadow: inset 0 2px 4px var(--shade); }
-.queue .name { font-weight: 700; overflow-wrap: anywhere; }
-.queue .state { font-size: 0.85rem; color: var(--muted); }
-.queue .state.err { color: var(--danger); font-weight: 700; }
-.queue .state.done { color: var(--ok); font-weight: 700; }
-.bar { height: 12px; margin-top: 6px; border-radius: 999px; overflow: hidden; background: var(--panel); border: 1.5px solid var(--line); }
-.bar > div { height: 100%; width: 0; background: var(--ok); transition: width 0.15s; }
+/* Área de soltar arquivos */
+.drop {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 26px 16px 20px;
+  border: 2px dashed var(--line); border-radius: 22px; background: var(--hi); box-shadow: inset 0 2px 8px var(--shade);
+  transition: border-color 0.15s, background 0.15s;
+}
+.drop:hover, .drop:focus-visible { border-color: var(--brown); outline: none; }
+.drop .i.big { width: 3rem; height: 3rem; color: var(--brown); }
+.drop b { font-size: 1.15rem; }
+.drop .row.center { justify-content: center; margin-top: 8px; }
+.drop.disabled { opacity: 0.5; pointer-events: none; }
+.btn span { pointer-events: none; }
+
+/* Véu que aparece ao arrastar arquivos por cima da página */
+#dropveil {
+  position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: color-mix(in oklab, var(--bg) 82%, var(--brown)); border: 4px dashed var(--brown); margin: 12px; border-radius: 28px;
+  font-size: 1.4rem; color: var(--brown-d); pointer-events: none;
+}
+#dropveil .i.big { width: 4.5rem; height: 4.5rem; }
+
+/* Painel de envio: total em cima, arquivo atual embaixo */
+.uploader { margin-top: 18px; padding-top: 16px; border-top: 1.5px dashed var(--line); display: grid; gap: 10px; }
+.up-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.up-count { display: flex; align-items: baseline; gap: 10px; }
+.up-count b { font-size: 1.9rem; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.bar { height: 12px; border-radius: 999px; overflow: hidden; background: var(--hi); border: 1.5px solid var(--line); box-shadow: inset 0 2px 4px var(--shade); }
+.bar > div { height: 100%; width: 0; background: var(--ok); border-radius: 999px; transition: width 0.12s linear; }
+.bar.big { height: 22px; }
+.bar.big > div { background: linear-gradient(180deg, var(--brown), var(--brown-d)); }
+.bar.big.finished > div { background: linear-gradient(180deg, color-mix(in oklab, var(--ok) 70%, white), var(--ok)); }
+.up-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: 3px 12px; border-radius: 999px; font-weight: 700; font-size: 0.82rem; border: 1.5px solid var(--line); background: var(--hi); }
+.chip.ok { color: var(--ok); } .chip.err { color: var(--danger); } .chip.skip { color: var(--muted); }
+.up-now { padding: 10px 14px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--hi); box-shadow: inset 0 2px 4px var(--shade); display: grid; gap: 4px; }
+.up-now .name { font-weight: 700; overflow-wrap: anywhere; }
+.up-now .state { font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.recent { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.85rem; }
+.recent li { display: flex; align-items: center; gap: 8px; overflow-wrap: anywhere; }
+.recent li.ok { color: var(--ok); } .recent li.err { color: var(--danger); } .recent li.skip { color: var(--muted); }
+.recent li span { color: var(--ink); opacity: 0.85; }
+.fails summary { cursor: pointer; font-weight: 700; color: var(--danger); }
+.fails ul { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; font-size: 0.85rem; max-height: 220px; overflow: auto; }
 
 /* Lista de ROMs */
+.searchbox { position: relative; margin-top: 10px; }
+.searchbox .i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.searchbox input { padding-left: 44px; }
 .list { list-style: none; margin: 8px 0 0; padding: 0; }
-.list li { display: grid; gap: 6px; padding: 14px 0; border-top: 1.5px dashed var(--line); }
+.list li { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: center; padding: 12px 0; border-top: 1.5px dashed var(--line); }
 .list li:first-child { border-top: 0; }
+.list li.more { display: block; text-align: center; }
+.rom-ico { position: relative; width: 46px; height: 52px; display: flex; align-items: center; justify-content: center; color: var(--brown); }
+.rom-ico .i { width: 46px; height: 52px; stroke-width: 1.4; }
+.rom-ico span { position: absolute; bottom: 9px; font-size: 0.55rem; font-weight: 800; letter-spacing: 0.02em; }
 .list .name { font-weight: 700; overflow-wrap: anywhere; }
 .list .meta { color: var(--muted); font-size: 0.85rem; }
-.list .actions { display: flex; gap: 8px; margin-top: 4px; }
+.list .actions { grid-column: 1 / -1; display: flex; gap: 8px; }
 .empty { text-align: center; padding: 24px 8px; color: var(--muted); font-weight: 700; }
+.check { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-weight: 600; font-size: 0.92rem; }
+.check input { width: 20px; height: 20px; accent-color: var(--brown); flex: none; }
 
 /* Diálogo e aviso */
 dialog {
@@ -123,9 +167,9 @@ dialog input { margin-top: 12px; }
 #disk strong { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 #disk .row { flex-wrap: wrap; row-gap: 2px; }
 
-@media (min-width: 480px) {
-  .list li { grid-template-columns: 1fr auto; align-items: center; }
-  .list .actions { margin-top: 0; }
+@media (min-width: 560px) {
+  .list li { grid-template-columns: auto 1fr auto; }
+  .list .actions { grid-column: auto; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 

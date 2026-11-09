@@ -17,7 +17,7 @@
 <body>
 
 <header class="top">
-  <a class="brand" href="/admin"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg>RetroPad <span>ROMs</span></a>
+  <a class="brand" href="/roms"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg>RetroPad <span>ROMs</span></a>
   <div class="top-actions">
     <button class="btn ghost hidden" data-install type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#download"/></svg><span class="lbl">Instalar</span></button>
     <a class="btn ghost" href="/"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg><span class="lbl">Controle</span></a>
@@ -52,25 +52,50 @@
   <!-- ROMs de um sistema -->
   <section id="roms" class="hidden">
     <div class="row">
-      <button class="btn ghost" id="back" type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#arrow-left"/></svg> Sistemas</button>
+      <a class="btn ghost" id="back" href="/roms"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#arrow-left"/></svg><span>Sistemas</span></a>
     </div>
     <h1 id="roms-title"></h1>
 
-    <div class="card">
-      <div class="row between wrap">
-        <label class="btn primary file">
-          <svg class="i" aria-hidden="true"><use href="/static/lucide.svg#upload"/></svg> Enviar ROMs
-          <input id="file" type="file" multiple>
-        </label>
-        <span id="disk-mini" class="muted"></span>
+    <div class="card" id="sendcard">
+      <div id="drop" class="drop" tabindex="0">
+        <svg class="i big" aria-hidden="true"><use href="/static/lucide.svg#cloud-upload"/></svg>
+        <b>Arraste os jogos para cá</b>
+        <span class="muted">Centenas de arquivos de uma vez, ou uma pasta inteira</span>
+        <div class="row wrap center">
+          <label class="btn primary file"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#upload"/></svg><span>Escolher arquivos</span><input id="file" type="file" multiple></label>
+          <label class="btn file"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#folder-open"/></svg><span>Escolher pasta</span><input id="folder" type="file" webkitdirectory multiple></label>
+        </div>
       </div>
       <p class="muted small" id="accepted"></p>
-      <ul id="queue" class="queue"></ul>
+      <p class="muted small" id="disk-mini"></p>
+
+      <!-- Painel de envio: progresso total em cima, progresso do arquivo atual embaixo -->
+      <div id="uploader" class="uploader hidden" aria-live="polite">
+        <div class="up-head">
+          <div class="up-count"><b id="upCount">0/0</b><span id="upLabel" class="muted">enviados</span></div>
+          <button class="btn small ghost" id="upCancel" type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#x"/></svg><span>Cancelar</span></button>
+          <button class="btn small ghost hidden" id="upClose" type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#check"/></svg><span>Fechar</span></button>
+        </div>
+        <div class="bar big" role="progressbar" aria-label="Progresso total" aria-valuemin="0" aria-valuemax="100"><div id="upBar"></div></div>
+        <div class="up-meta muted"><span id="upBytes"></span><span id="upSpeed"></span><span id="upEta"></span></div>
+        <div class="chips"><span class="chip ok hidden" id="upOk"></span><span class="chip skip hidden" id="upSkip"></span><span class="chip err hidden" id="upErr"></span></div>
+        <div class="up-now" id="upNow">
+          <div class="name" id="upName"></div>
+          <div class="state muted" id="upState"></div>
+          <div class="bar"><div id="upItemBar"></div></div>
+        </div>
+        <ul class="recent" id="upRecent"></ul>
+        <details class="fails hidden" id="upFails">
+          <summary><span id="upFailTitle"></span></summary>
+          <ul id="upFailList"></ul>
+          <button class="btn small" id="upRetry" type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#refresh-cw"/></svg><span>Tentar de novo as que falharam</span></button>
+        </details>
+      </div>
     </div>
 
     <div class="card">
-      <input id="filter" type="search" placeholder="Buscar pelo nome…" autocomplete="off">
-      <p id="count" class="muted small"></p>
+      <div class="row between wrap"><p class="muted small" id="count" style="margin:0"></p></div>
+      <div class="searchbox"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#search"/></svg><input id="filter" type="search" placeholder="Buscar pelo nome…" autocomplete="off"></div>
       <ul id="roms-list" class="list"></ul>
       <p id="roms-empty" class="empty hidden"></p>
     </div>
@@ -82,6 +107,7 @@
     <h2 id="dlg-title"></h2>
     <p id="dlg-text"></p>
     <input id="dlg-input" class="hidden" type="text" autocomplete="off">
+    <label id="dlg-check-wrap" class="check hidden"><input type="checkbox" id="dlg-check"><span id="dlg-check-text"></span></label>
     <div class="row end">
       <button class="btn ghost" value="cancel" type="submit" id="dlg-cancel">Cancelar</button>
       <button class="btn primary" value="ok" type="submit" id="dlg-ok">OK</button>
@@ -89,6 +115,7 @@
   </form>
 </dialog>
 
+<div id="dropveil" class="hidden"><svg class="i big" aria-hidden="true"><use href="/static/lucide.svg#cloud-upload"/></svg><b>Solte para enviar</b></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="/static/settings.js"></script>

@@ -289,6 +289,24 @@ Cobrem nomes, extensões, path traversal, limite de tamanho, espaço livre, assi
 
 Para instalar e configurar o serviço para iniciar junto com o Raspberry, siga a [etapa de inicialização automática](#5-configurar-a-inicialização-automática) do guia de instalação acima.
 
+## Rotas
+
+Cada função tem o seu endereço (serve como atalho no celular e no app instalado):
+
+| Rota | O que abre |
+|---|---|
+| `/` | Início: escolher Gamepad, Mouse ou Tela |
+| `/gamepad` | Gamepad (pergunta se você é o Jogador 1 ou 2) |
+| `/mouse` | Mouse com touchpad e teclado do celular |
+| `/tela` | Tela do sistema ao vivo (com touchpad por cima) |
+| `/config` | Configurações (tema, vibração, velocidade do mouse, limpar IndexedDB) |
+| `/roms` | Gerenciador de ROMs (lista de sistemas); `/admin` é um apelido |
+| `/roms/<sistema>` | ROMs de um sistema, por exemplo `/roms/nes` |
+| `/ws` | WebSocket do controle (gamepad, mouse, teclado e vídeo) |
+| `/api/...` | API do gerenciador de ROMs |
+
+Abrir `/mouse`, `/tela` ou `/gamepad` direto mostra uma tela de conexão (PIN e botão **Conectar**). O app instalado ganha atalhos para Gamepad, Mouse, Tela e ROMs (pressione e segure o ícone). Pelo túnel ngrok, `/roms`, `/admin` e `/api` continuam bloqueados (só na rede local).
+
 ## Modos: Gamepad, Mouse e Tela
 
 Na tela inicial escolha o modo:
@@ -309,6 +327,16 @@ A engrenagem (canto superior direito) abre o menu: ligar/desligar a tela do sist
 
 Mouse e teclado viram dispositivos virtuais (`RetroPad Mouse` e `RetroPad Teclado`) via uinput, então funcionam em qualquer programa do Raspberry. **Limitação:** o texto é convertido para teclas do layout US. Caracteres que dependem do layout do PC (como `ç`, `ã`, `é`) são ignorados em vez de digitar a tecla errada. Letras, números e símbolos como `! ? @ #` funcionam normalmente.
 
+### Envio em massa de ROMs
+
+Em `/roms/<sistema>` arraste **centenas de jogos ou uma pasta inteira** para a área de envio (ou use *Escolher arquivos* / *Escolher pasta*). O painel mostra o **progresso total em cima** (`533/1000` e uma barra) e o do **arquivo atual embaixo**, além de bytes enviados, velocidade, tempo restante, e quantos foram enviados, ignorados e falharam.
+
+- Arquivos de extensão não aceita e arquivos ocultos são ignorados sem gastar uma requisição.
+- Se um arquivo já existe, aparece a pergunta *Sobrescrever?* com a opção de aplicar a resposta a todos os repetidos da remessa.
+- **Cancelar** para a fila; as falhas ficam listadas com **Tentar de novo**.
+- Envia um arquivo por vez (o cartão SD agradece). Testado com 1000 arquivos: a fila usa um punhado de elementos na tela, então continua leve.
+- A lista de ROMs mostra 300 por vez (*Mostrar mais*), então sistemas com milhares de jogos abrem rápido.
+
 ## Tela do sistema (streaming)
 
 No modo **Tela** (ou pelo menu da engrenagem em qualquer modo) o celular mostra a tela do Raspberry em tempo real. No Gamepad a imagem fica atrás dos botões (que ficam translúcidos); no Mouse ela aparece dentro do touchpad, então dá para controlar o PC olhando só o celular.
@@ -325,6 +353,8 @@ Requisitos: `sudo apt install ffmpeg`. A fonte é detectada sozinha: `x11grab` s
 | `RETROPAD_STREAM_QUALITY` | `6` | JPEG: 2 (melhor) a 31 (pior) |
 | `RETROPAD_STREAM_INPUT` | vazio | opções de entrada do ffmpeg para trocar a detecção, ex.: `-f x11grab -framerate 12 -i :0` |
 | `RETROPAD_STREAM_FILTER` | vazio | filtro aplicado antes de reduzir, ex.: `hwdownload,format=bgr0` |
+
+**Por que MJPEG pelo WebSocket (e não H.264/WebRTC)?** Medido aqui, capturando um servidor X real e reduzindo para 854 px a 12 fps: MJPEG gastou ~2,6 Mbit/s e ~10% de um núcleo; H.264 (`libx264 ultrafast`) ~1,5 Mbit/s e ~13%. Ou seja, H.264 economiza só ~40% de banda, não poupa CPU e ainda exige `MediaSource` no navegador (o iPhone só tem em versões recentes), mais latência de GOP e mais código. No MJPEG cada quadro é independente: quadros atrasados são descartados sem borrar a imagem, a conexão se recupera na hora, e funciona em qualquer navegador e através do túnel ngrok com o mesmo PIN. Numa tela parada (menu do EmulationStation) gasta cerca de 1 Mbit/s. Se a banda ou a CPU do Pi apertarem, baixe `RETROPAD_STREAM_FPS` e `RETROPAD_STREAM_WIDTH`. Testei também descartar quadros repetidos com o filtro `mpdecimate`: ele não entregou quadro nenhum, então **não** é usado.
 
 No Raspberry Pi, o RetroArch com driver KMS/DRM nem sempre aparece no `/dev/fb0` (a imagem sai preta). Nesse caso tente captura por KMS, que costuma exigir rodar o servidor como root: `RETROPAD_STREAM_INPUT="-f kmsgrab -i -"` com `RETROPAD_STREAM_FILTER="hwdownload,format=bgr0"`. Essa combinação depende do modelo do Pi e do driver; teste no seu aparelho.
 

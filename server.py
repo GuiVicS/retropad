@@ -209,14 +209,24 @@ def type_text(back, text, mods=()):
             _tap(kb, code, mods + ([e.KEY_LEFTSHIFT] if shift and e.KEY_LEFTSHIFT not in mods else []))
 
 
-@app.route("/")
-def index():
+# Uma rota para cada função. Todas as do controle servem a mesma página, que lê o endereço
+# para saber qual função abrir; assim o link (ou o atalho do app instalado) já cai na função certa.
+CONTROL_ROUTES = ("/", "/gamepad", "/mouse", "/tela", "/config")
+ROMS_ROUTES = ("/roms", "/roms/<system>", "/admin")     # /admin continua valendo como apelido
+
+
+def _control_page(**_):
     return send_from_directory(STATIC_DIR, "index.html")
 
 
-@app.route("/admin")
-def admin():
+def _roms_page(**_):
     return send_from_directory(STATIC_DIR, "admin.html")
+
+
+for _path in CONTROL_ROUTES:
+    app.add_url_rule(_path, endpoint="control" + _path.replace("/", "_"), view_func=_control_page)
+for _path in ROMS_ROUTES:
+    app.add_url_rule(_path, endpoint="roms" + _path.replace("/", "_").replace("<", "").replace(">", ""), view_func=_roms_page)
 
 
 @app.route("/sw.js")

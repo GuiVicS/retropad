@@ -105,7 +105,7 @@ def test_two_viewers_share_one_ffmpeg():
 
 @pytest.mark.skipif(not HAS_FFMPEG, reason="ffmpeg não instalado")
 def test_capture_failure_is_reported_not_hung():
-    bad = load_settings({"RETROPAD_STREAM_INPUT": "-f x11grab -i :99"})   # não existe servidor X aqui
+    bad = load_settings({"RETROPAD_STREAM_INPUT": "-f x11grab -i :987"})  # display que não existe
     st = stream.Streamer(bad, command_factory=lambda: stream.build_command(bad, env={}))
     st.acquire()
     try:

@@ -5,7 +5,7 @@ PWA completo (service worker exige HTTPS) e jogar fora da rede local.
 
 ATENÇÃO: isso expõe o servidor na internet. Por isso este módulo:
   - exige PINs de pelo menos 6 caracteres;
-  - bloqueia /admin e /api pelo túnel, a menos que RETROPAD_NGROK_ADMIN=1;
+  - bloqueia /admin, /roms e /api pelo túnel, a menos que RETROPAD_NGROK_ADMIN=1;
   - faz o limite de tentativas de PIN contar pelo IP real do visitante.
 """
 import atexit
@@ -34,6 +34,11 @@ def check_settings(cfg):
     return problems
 
 
+def is_admin_path(path):
+    """Páginas e API do gerenciador de ROMs (nunca expostas pelo túnel, salvo RETROPAD_NGROK_ADMIN=1)."""
+    return path in ("/admin", "/roms") or path.startswith(("/roms/", "/api/"))
+
+
 class TunnelMiddleware:
     """Marca requisições vindas do ngrok e usa o IP real do visitante.
 
@@ -60,7 +65,7 @@ def install_guard(app, cfg):
     def keep_admin_local():
         if cfg.ngrok_allow_admin or not request.environ.get("retropad.tunnel"):
             return None
-        if request.path == "/admin" or request.path.startswith("/api/"):
+        if is_admin_path(request.path):
             return ("O gerenciador de ROMs só está disponível na rede local.", 403)
         return None
 
