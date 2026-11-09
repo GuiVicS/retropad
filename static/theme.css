@@ -1,190 +1,37 @@
-/* RetroPad - tema (neo-brutalista, roxo + creme)
+/* RetroPad - tema (pêssego no claro, chocolate no escuro). Fonte única do visual.
  *
- * Origem: tema do tweakcn (https://tweakcn.com/r/themes/cmlqxbfu8000004joajt9gs64),
- * portado para CSS puro, sem Tailwind. Para trocar o visual, edite só este arquivo:
- * os componentes em admin.css e index.html usam apenas as variáveis abaixo.
+ * É usado pelo controle (index.html) e pelo gerenciador de ROMs (admin.html + admin.css).
+ * Para mudar o visual do app inteiro, edite só as variáveis abaixo.
  *
  * Modo escuro: automático pelo sistema; <html data-theme="light|dark"> força um dos dois.
  */
 
-:root,
-:root[data-theme="light"] {
-  --background: oklch(0.9559 0.0146 102.4588);
-  --foreground: oklch(0 0 0);
-  --card: oklch(0.9559 0.0146 102.4588);
-  --card-foreground: oklch(0 0 0);
-  --popover: oklch(1.0000 0 0);
-  --popover-foreground: oklch(0 0 0);
-  --primary: oklch(0.6268 0.2325 303.9004);
-  --primary-foreground: oklch(1.0000 0 0);
-  --secondary: oklch(0.7217 0.1767 305.5038);
-  --secondary-foreground: oklch(0 0 0);
-  --muted: oklch(0.9255 0.0160 102.8419);
-  --muted-foreground: oklch(0.5103 0 0);
-  --accent: oklch(0.6268 0.2325 303.9004);
-  --accent-foreground: oklch(1.0000 0 0);
-  --destructive: oklch(0.6730 0.2146 25.0397);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0 0 0);
-  --input: oklch(1.0000 0 0);
-  --ring: oklch(0.6268 0.2325 303.9004);
-  --chart-1: oklch(0.6268 0.2325 303.9004);
-  --chart-2: oklch(0.8836 0.2053 155.2096);
-  --chart-3: oklch(0 0 0);
-  --chart-4: oklch(0.5103 0 0);
-  --chart-5: oklch(0.7217 0.1767 305.5038);
-  --sidebar: oklch(0.1822 0 0);
-  --sidebar-foreground: oklch(1.0000 0 0);
-  --sidebar-primary: oklch(0.6268 0.2325 303.9004);
-  --sidebar-primary-foreground: oklch(1.0000 0 0);
-  --sidebar-accent: oklch(0.2393 0 0);
-  --sidebar-accent-foreground: oklch(1.0000 0 0);
-  --sidebar-border: oklch(0.3211 0 0);
-  --sidebar-ring: oklch(0.6268 0.2325 303.9004);
-  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-  --radius: 2rem;
-  --shadow-x: 4px;
-  --shadow-y: 4px;
-  --shadow-blur: 0px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 1.0;
-  --shadow-color: #000000;
-  --shadow-2xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.50);
-  --shadow-xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.50);
-  --shadow-sm: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 1px 2px -1px hsl(0 0% 0% / 1.00);
-  --shadow: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 1px 2px -1px hsl(0 0% 0% / 1.00);
-  --shadow-md: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 2px 4px -1px hsl(0 0% 0% / 1.00);
-  --shadow-lg: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 4px 6px -1px hsl(0 0% 0% / 1.00);
-  --shadow-xl: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 8px 10px -1px hsl(0 0% 0% / 1.00);
-  --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 2.50);
-  --tracking-normal: -0.01em;
-  --spacing: 0.25rem;
-}
-
-/* Nomes curtos previstos no plano (Fase 5). Apontam para os tokens do tema. */
-:root {
-  --bg: var(--background);
-  --surface: var(--card);
-  --accent-color: var(--accent);
-  --text: var(--foreground);
-  --font: var(--font-sans);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) / 2);
-  --success: oklch(0.8836 0.2053 155.2096);
-  --danger-text: var(--destructive);
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --background: oklch(0.1822 0 0);
-    --foreground: oklch(0.9559 0.0146 102.4588);
-    --card: oklch(0.2393 0 0);
-    --card-foreground: oklch(0.9559 0.0146 102.4588);
-    --popover: oklch(0.2393 0 0);
-    --popover-foreground: oklch(0.9559 0.0146 102.4588);
-    --primary: oklch(0.6268 0.2325 303.9004);
-    --primary-foreground: oklch(1.0000 0 0);
-    --secondary: oklch(0.2850 0 0);
-    --secondary-foreground: oklch(0.9559 0.0146 102.4588);
-    --muted: oklch(0.2850 0 0);
-    --muted-foreground: oklch(0.7058 0 0);
-    --accent: oklch(0.6268 0.2325 303.9004);
-    --accent-foreground: oklch(1.0000 0 0);
-    --destructive: oklch(0.3767 0.1546 29.2339);
-    --destructive-foreground: oklch(1.0000 0 0);
-    --border: oklch(0.3211 0 0);
-    --input: oklch(0.2393 0 0);
-    --ring: oklch(0.6268 0.2325 303.9004);
-    --chart-1: oklch(0.6268 0.2325 303.9004);
-    --chart-2: oklch(0.8836 0.2053 155.2096);
-    --chart-3: oklch(1.0000 0 0);
-    --chart-4: oklch(0.5103 0 0);
-    --chart-5: oklch(0.1822 0 0);
-    --sidebar: oklch(0 0 0);
-    --sidebar-foreground: oklch(1.0000 0 0);
-    --sidebar-primary: oklch(0.6268 0.2325 303.9004);
-    --sidebar-primary-foreground: oklch(1.0000 0 0);
-    --sidebar-accent: oklch(0.2393 0 0);
-    --sidebar-accent-foreground: oklch(1.0000 0 0);
-    --sidebar-border: oklch(0.3211 0 0);
-    --sidebar-ring: oklch(0.6268 0.2325 303.9004);
-    --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --font-serif: Georgia, serif;
-    --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    --radius: 2rem;
-    --shadow-x: 4px;
-    --shadow-y: 4px;
-    --shadow-blur: 0px;
-    --shadow-spread: 0px;
-    --shadow-opacity: 1.0;
-    --shadow-color: #000000;
-    --shadow-2xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.50);
-    --shadow-xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.50);
-    --shadow-sm: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 1px 2px -1px hsl(0 0% 0% / 1.00);
-    --shadow: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 1px 2px -1px hsl(0 0% 0% / 1.00);
-    --shadow-md: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 2px 4px -1px hsl(0 0% 0% / 1.00);
-    --shadow-lg: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 4px 6px -1px hsl(0 0% 0% / 1.00);
-    --shadow-xl: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 8px 10px -1px hsl(0 0% 0% / 1.00);
-    --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 2.50);
-    --danger-text: oklch(0.78 0.16 25);
-    color-scheme: dark;
+  :root {
+    --bg: #f8e8dc; --panel: #f7e4d6; --line: #e2c7b4; --ink: #6b402c; --muted: #a67f6b;
+    --brown: #8a5b45; --brown-d: #66402e; --on-brown: #fff6ee;
+    --hi: #fff7f0; --lo: #f1d9c9; --dot: rgba(138, 91, 69, 0.26); --shade: rgba(120, 70, 45, 0.28);
+    --danger: #b4432f; --ok: #6f9a55;
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    color-scheme: light;
   }
-}
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #231710; --panel: #2c1d15; --line: #4a3326; --ink: #f2d9c8; --muted: #b68f78;
+      --brown: #c68e72; --brown-d: #a8725a; --on-brown: #2a1810;
+      --hi: #4e3a2e; --lo: #3a2a20; --dot: rgba(242, 217, 200, 0.2); --shade: rgba(0, 0, 0, 0.5);
+      --danger: #e07a64; --ok: #9bc27d; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #231710; --panel: #2c1d15; --line: #4a3326; --ink: #f2d9c8; --muted: #b68f78;
+    --brown: #c68e72; --brown-d: #a8725a; --on-brown: #2a1810;
+    --hi: #4e3a2e; --lo: #3a2a20; --dot: rgba(242, 217, 200, 0.2); --shade: rgba(0, 0, 0, 0.5);
+    --danger: #e07a64; --ok: #9bc27d; color-scheme: dark;
+  }
 
-:root[data-theme="dark"] {
-  --danger-text: oklch(0.78 0.16 25);
-  --background: oklch(0.1822 0 0);
-  --foreground: oklch(0.9559 0.0146 102.4588);
-  --card: oklch(0.2393 0 0);
-  --card-foreground: oklch(0.9559 0.0146 102.4588);
-  --popover: oklch(0.2393 0 0);
-  --popover-foreground: oklch(0.9559 0.0146 102.4588);
-  --primary: oklch(0.6268 0.2325 303.9004);
-  --primary-foreground: oklch(1.0000 0 0);
-  --secondary: oklch(0.2850 0 0);
-  --secondary-foreground: oklch(0.9559 0.0146 102.4588);
-  --muted: oklch(0.2850 0 0);
-  --muted-foreground: oklch(0.7058 0 0);
-  --accent: oklch(0.6268 0.2325 303.9004);
-  --accent-foreground: oklch(1.0000 0 0);
-  --destructive: oklch(0.3767 0.1546 29.2339);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.3211 0 0);
-  --input: oklch(0.2393 0 0);
-  --ring: oklch(0.6268 0.2325 303.9004);
-  --chart-1: oklch(0.6268 0.2325 303.9004);
-  --chart-2: oklch(0.8836 0.2053 155.2096);
-  --chart-3: oklch(1.0000 0 0);
-  --chart-4: oklch(0.5103 0 0);
-  --chart-5: oklch(0.1822 0 0);
-  --sidebar: oklch(0 0 0);
-  --sidebar-foreground: oklch(1.0000 0 0);
-  --sidebar-primary: oklch(0.6268 0.2325 303.9004);
-  --sidebar-primary-foreground: oklch(1.0000 0 0);
-  --sidebar-accent: oklch(0.2393 0 0);
-  --sidebar-accent-foreground: oklch(1.0000 0 0);
-  --sidebar-border: oklch(0.3211 0 0);
-  --sidebar-ring: oklch(0.6268 0.2325 303.9004);
-  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-  --radius: 2rem;
-  --shadow-x: 4px;
-  --shadow-y: 4px;
-  --shadow-blur: 0px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 1.0;
-  --shadow-color: #000000;
-  --shadow-2xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.50);
-  --shadow-xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.50);
-  --shadow-sm: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 1px 2px -1px hsl(0 0% 0% / 1.00);
-  --shadow: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 1px 2px -1px hsl(0 0% 0% / 1.00);
-  --shadow-md: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 2px 4px -1px hsl(0 0% 0% / 1.00);
-  --shadow-lg: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 4px 6px -1px hsl(0 0% 0% / 1.00);
-  --shadow-xl: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 8px 10px -1px hsl(0 0% 0% / 1.00);
-  --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 2.50);
-  color-scheme: dark;
-}
+
+/* Utilidades compartilhadas */
+.hidden { display: none !important; }
+.i { width: 1.2em; height: 1.2em; flex: none; vertical-align: -0.22em; pointer-events: none;
+     fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.i.fill { fill: currentColor; }

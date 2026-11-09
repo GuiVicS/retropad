@@ -11,33 +11,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="RetroPad">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="/static/theme.css">
 <script>try{var t=localStorage.getItem("rp_theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <title>RetroPad</title>
 <style>
-  /* ---------- Tema pêssego (claro) e chocolate (escuro) ---------- */
-  :root {
-    --bg: #f8e8dc; --panel: #f7e4d6; --line: #e2c7b4; --ink: #6b402c; --muted: #a67f6b;
-    --brown: #8a5b45; --brown-d: #66402e; --on-brown: #fff6ee;
-    --hi: #fff7f0; --lo: #f1d9c9; --dot: rgba(138, 91, 69, 0.26); --shade: rgba(120, 70, 45, 0.28);
-    --danger: #b4432f;
-    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    color-scheme: light;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #231710; --panel: #2c1d15; --line: #4a3326; --ink: #f2d9c8; --muted: #b68f78;
-      --brown: #c68e72; --brown-d: #a8725a; --on-brown: #2a1810;
-      --hi: #4e3a2e; --lo: #3a2a20; --dot: rgba(242, 217, 200, 0.2); --shade: rgba(0, 0, 0, 0.5);
-      --danger: #e07a64; color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #231710; --panel: #2c1d15; --line: #4a3326; --ink: #f2d9c8; --muted: #b68f78;
-    --brown: #c68e72; --brown-d: #a8725a; --on-brown: #2a1810;
-    --hi: #4e3a2e; --lo: #3a2a20; --dot: rgba(242, 217, 200, 0.2); --shade: rgba(0, 0, 0, 0.5);
-    --danger: #e07a64; color-scheme: dark;
-  }
-
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body {
     height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font);

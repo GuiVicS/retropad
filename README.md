@@ -24,7 +24,7 @@ retropad/
 ├── static/
 │   ├── index.html       # controle (paisagem, multitoque)
 │   ├── admin.html       # gerenciador de ROMs (funciona em retrato)
-│   ├── theme.css        # tema (variáveis); troque só este arquivo para mudar o visual
+│   ├── theme.css        # tema (variáveis de cor); troque só este arquivo para mudar o visual
 │   ├── admin.css, app.js
 │   ├── sw.js, pwa.js    # service worker e botão "Instalar app"
 │   ├── manifest.json    # PWA
@@ -333,5 +333,5 @@ Veja "PWA e ngrok". Resumo: abra o endereço **https** do túnel e use "Instalar
 - **Orientação:** no modo Gamepad e em retrato, a página mostra "gire o celular" e esconde o controle (Mouse e Tela funcionam nos dois sentidos). Isso é feito por CSS, porque o iOS não aceita bloqueio de orientação de forma confiável.
 - **Ícones:** são do [Lucide](https://lucide.dev) (licença ISC), em um sprite local `static/lucide.svg`, sem CDN, então funcionam offline.
 - **Vibração:** os botões vibram de leve no Android (`navigator.vibrate`); o iOS não tem essa API.
-- **Visual:** o tema vem do tweakcn (neo-brutalista, roxo e creme), com modo claro e escuro (botão ☀/☾; sem escolha, segue o sistema). Para trocar, edite `static/theme.css`.
+- **Visual:** um tema só para o app inteiro (controle e gerenciador de ROMs): pêssego no claro e chocolate no escuro, com botões em relevo e fundo pontilhado. Sem escolha salva, segue o tema do sistema. Para trocar as cores, edite as variáveis de `static/theme.css`.
 - **Diagnóstico:** se a página conectar mas nada acontecer, veja o log do servidor. Erros de `/dev/uinput` aparecem ali.
