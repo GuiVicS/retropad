@@ -358,6 +358,16 @@ Requisitos: `sudo apt install ffmpeg`. A fonte é detectada sozinha: `x11grab` s
 | `RETROPAD_STREAM_INPUT` | vazio | opções de entrada do ffmpeg para trocar a detecção, ex.: `-f x11grab -framerate 12 -i :0` |
 | `RETROPAD_STREAM_FILTER` | vazio | filtro aplicado antes de reduzir, ex.: `hwdownload,format=bgr0` |
 
+**A tela mostra só o terminal (o EmulationStation não aparece)?** O padrão (`fbdev`, `/dev/fb0`) só enxerga o console de texto. O EmulationStation e os jogos são desenhados pela GPU por outro caminho, que depende do modelo do Pi. Rode o diagnóstico **com o EmulationStation aberto na TV** (por SSH, ou deixe agendado e abra o ES):
+
+```bash
+cd ~/retropad
+(sleep 45; sudo bash scripts/diagnose-screen.sh > /tmp/diag.txt 2>&1) &
+emulationstation          # espere abrir; depois saia e leia:  cat /tmp/diag.txt
+```
+
+Ele testa `x11grab`, `fbdev`, `kmsgrab` e `raspi2png`, mede o brilho de um quadro de cada e diz quais mostram a tela de verdade, com as linhas `RETROPAD_STREAM_*` para colocar em `/etc/retropad.env`.
+
 **Por que MJPEG pelo WebSocket (e não H.264/WebRTC)?** Medido aqui, capturando um servidor X real e reduzindo para 854 px a 12 fps: MJPEG gastou ~2,6 Mbit/s e ~10% de um núcleo; H.264 (`libx264 ultrafast`) ~1,5 Mbit/s e ~13%. Ou seja, H.264 economiza só ~40% de banda, não poupa CPU e ainda exige `MediaSource` no navegador (o iPhone só tem em versões recentes), mais latência de GOP e mais código. No MJPEG cada quadro é independente: quadros atrasados são descartados sem borrar a imagem, a conexão se recupera na hora, e funciona em qualquer navegador e através do túnel ngrok com o mesmo PIN. Numa tela parada (menu do EmulationStation) gasta cerca de 1 Mbit/s. Se a banda ou a CPU do Pi apertarem, baixe `RETROPAD_STREAM_FPS` e `RETROPAD_STREAM_WIDTH`. Testei também descartar quadros repetidos com o filtro `mpdecimate`: ele não entregou quadro nenhum, então **não** é usado.
 
 No Raspberry Pi, o RetroArch com driver KMS/DRM nem sempre aparece no `/dev/fb0` (a imagem sai preta). Nesse caso tente captura por KMS, que costuma exigir rodar o servidor como root: `RETROPAD_STREAM_INPUT="-f kmsgrab -i -"` com `RETROPAD_STREAM_FILTER="hwdownload,format=bgr0"`. Essa combinação depende do modelo do Pi e do driver; teste no seu aparelho.
