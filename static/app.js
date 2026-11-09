@@ -319,12 +319,11 @@
     $('theme').replaceChildren(icon(isDark() ? 'moon' : 'sun'));
     $('theme').title = isDark() ? 'Modo escuro (toque para o claro)' : 'Modo claro (toque para o escuro)';
   }
-  const saved = store.get('localStorage', 'rp_theme');
-  if (saved) root.dataset.theme = saved;
+  // O tema fica salvo no IndexedDB (settings.js), o mesmo do controle.
   paintThemeButton();
-  $('theme').addEventListener('click', () => {
-    root.dataset.theme = isDark() ? 'light' : 'dark';
-    store.set('localStorage', 'rp_theme', root.dataset.theme);
+  RPConfig.load().then(paintThemeButton);
+  $('theme').addEventListener('click', async () => {
+    await RPConfig.set('theme', isDark() ? 'light' : 'dark');
     paintThemeButton();
   });
 

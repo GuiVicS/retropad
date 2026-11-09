@@ -297,7 +297,15 @@ Na tela inicial escolha o modo:
 - **Mouse:** a tela inteira vira um touchpad pontilhado. Arraste para mover, toque para clicar, toque com dois dedos para o clique direito, arraste com dois dedos para rolar. Toque e logo em seguida arraste para segurar o botão (arrastar janelas, selecionar texto). O botão flutuante de teclado abre o **teclado nativo do celular**: o que você digita aparece no PC. Junto vem uma folha com as teclas que o celular não tem: Esc, Tab, Home, End, PgUp, PgDn, Ins, Win, Ctrl, Alt, Shift, setas e, pelo botão **Fn**, F1 a F12. Ctrl, Alt, Shift e Win valem para a próxima tecla ou letra (ex.: toque em Ctrl e digite `c`).
 - **Tela:** o mesmo touchpad, já mostrando a tela do Raspberry (veja abaixo).
 
-A engrenagem (canto superior direito) abre o menu: ligar/desligar a tela do sistema, trocar o tema e sair.
+**Mouse e Tela conectam com um toque**, sem escolher jogador (eles não usam vaga de jogador). Só o Gamepad pergunta se você é o Jogador 1 ou 2, e destaca o último que você usou.
+
+### Configurações (salvas no aparelho)
+
+O botão **Configurações** (na tela inicial e no menu da engrenagem) guarda no **IndexedDB** do navegador: tema (Auto, Claro ou Escuro), último modo e jogador, tela do sistema ligada, vibração ao tocar e velocidade do mouse. O gerenciador de ROMs usa o mesmo tema. O PIN nunca é salvo.
+
+**Limpar IndexedDB** apaga tudo isso e volta aos padrões (pede um segundo toque para confirmar). Se o navegador bloquear o IndexedDB (alguns modos privados), o app continua funcionando, só não lembra as preferências. Os dados ficam em `static/settings.js` (`RPConfig`).
+
+A engrenagem (canto superior direito) abre o menu: ligar/desligar a tela do sistema, abrir as Configurações e sair.
 
 Mouse e teclado viram dispositivos virtuais (`RetroPad Mouse` e `RetroPad Teclado`) via uinput, então funcionam em qualquer programa do Raspberry. **Limitação:** o texto é convertido para teclas do layout US. Caracteres que dependem do layout do PC (como `ç`, `ã`, `é`) são ignorados em vez de digitar a tecla errada. Letras, números e símbolos como `! ? @ #` funcionam normalmente.
 

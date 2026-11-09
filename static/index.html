@@ -55,6 +55,15 @@
   }
   #pin::placeholder { color: var(--muted); }
   #pin:focus-visible, .seg button:focus-visible, .cta:focus-visible, .link-btn:focus-visible { outline: 3px solid var(--brown); outline-offset: 2px; }
+  .launch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: min(560px, 92vw); }
+  .tile { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 8px; border-radius: 22px; font-weight: 800; font-size: 1rem; }
+  .tile .i { width: 2em; height: 2em; color: var(--brown); }
+  .tile small { font-weight: 600; font-size: 0.74rem; color: var(--muted); line-height: 1.2; }
+  .tile.on { background: linear-gradient(180deg, var(--brown), var(--brown-d)); color: var(--on-brown); }
+  .tile.on .i, .tile.on small { color: var(--on-brown); }
+  .who { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .who > span { font-weight: 700; color: var(--muted); font-size: 0.9rem; }
+  .cta.last { outline: 3px solid color-mix(in oklab, var(--brown) 45%, transparent); outline-offset: 2px; }
   .seg { display: flex; padding: 4px; border-radius: 999px; background: var(--panel); border: 1.5px solid var(--line); box-shadow: inset 0 2px 5px var(--shade); }
   .seg button { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; color: var(--muted); }
   .seg button.on { background: linear-gradient(180deg, var(--brown), var(--brown-d)); color: var(--on-brown); box-shadow: 0 3px 8px var(--shade); }
@@ -71,7 +80,11 @@
   .join-links a { color: var(--muted); font-size: 0.95rem; }
   .link-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; color: var(--ink); background: var(--panel); border: 1.5px solid var(--line); }
   @media (max-height: 460px) {
-    #join { gap: 9px; }
+    #join { gap: 8px; }
+    .tile { flex-direction: row; justify-content: center; padding: 10px 8px; }
+    .tile small { display: none; }
+    .tile .i { width: 1.5em; height: 1.5em; }
+    .who { flex-direction: row; gap: 14px; }
     .logo { font-size: 1.3rem; }
     .cta { padding: 10px 24px; font-size: 1rem; }
     .seg button { padding: 8px 16px; }
@@ -159,6 +172,32 @@
   #menu button.danger { color: var(--danger); }
   #menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 8px; }
 
+  #settings {
+    position: fixed; z-index: 52; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(400px, 92vw); max-height: 92vh; overflow-y: auto; overflow-x: hidden;
+    background: var(--bg); border: 1.5px solid var(--line); border-radius: 26px; padding: 18px 18px 16px; box-shadow: 0 18px 50px var(--shade); touch-action: pan-y;
+  }
+  #settings .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 1.15rem; font-weight: 800; }
+  #settings .head button { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .srow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 11px 2px; border-top: 1px solid var(--line); font-weight: 700; }
+  .srow.col { flex-direction: column; align-items: stretch; gap: 8px; }
+  .srow b { color: var(--brown); }
+  .seg.compact { flex: none; max-width: 100%; }
+  .seg.compact button { padding: 7px 12px; font-size: 0.85rem; white-space: nowrap; }
+  .switch { width: 54px; height: 32px; border-radius: 999px; background: var(--panel); border: 1.5px solid var(--line); box-shadow: inset 0 2px 5px var(--shade); position: relative; flex: none; }
+  .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--muted); transition: transform .15s, background .15s; }
+  .switch[aria-checked="true"] { background: var(--brown); }
+  .switch[aria-checked="true"]::after { transform: translateX(22px); background: var(--on-brown); }
+  #setSens { width: 100%; accent-color: var(--brown); }
+  #settings .note { font-size: 0.78rem; color: var(--muted); margin: 6px 2px 12px; line-height: 1.4; }
+  #setClear { width: 100%; min-height: 48px; border-radius: 999px; font-weight: 800; color: #fff;
+    background: linear-gradient(180deg, color-mix(in oklab, var(--danger) 82%, white), var(--danger)); box-shadow: 0 6px 14px var(--shade); }
+  #setClear.armed { outline: 3px solid color-mix(in oklab, var(--danger) 50%, transparent); outline-offset: 2px; }
+  @media (max-height: 460px) {
+    #settings { padding: 12px 14px; }
+    .srow { padding: 6px 2px; }
+    #settings .note { margin: 4px 2px 8px; font-size: 0.72rem; }
+    #setClear { min-height: 42px; }
+  }
   #streamMsg {
     position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 35; max-width: min(92vw, 520px);
     display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 18px; border-radius: 22px; line-height: 1.4;
@@ -210,22 +249,24 @@
   <div class="logo"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg> RetroPad</div>
   <input id="pin" type="password" inputmode="numeric" placeholder="PIN (se houver)" autocomplete="off" aria-label="PIN">
 
-  <div class="seg" id="modeSeg" role="group" aria-label="Modo de controle">
-    <button type="button" data-mode="gamepad"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg> Gamepad</button>
-    <button type="button" data-mode="mouse"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#mouse-pointer-2"/></svg> Mouse</button>
-    <button type="button" data-mode="screen"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#monitor-play"/></svg> Tela</button>
+  <div class="launch" id="launch" role="group" aria-label="Como você quer usar">
+    <button type="button" class="tile soft" data-mode="gamepad"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg>Gamepad<small>jogador 1 ou 2</small></button>
+    <button type="button" class="tile soft" data-mode="mouse"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#mouse-pointer-2"/></svg>Mouse<small>touchpad e teclado</small></button>
+    <button type="button" class="tile soft" data-mode="screen"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#monitor-play"/></svg>Tela<small>ver e controlar</small></button>
   </div>
 
-  <div class="players" id="players">
-    <button type="button" class="cta" id="p1">Jogador 1</button>
-    <button type="button" class="cta" id="p2">Jogador 2</button>
+  <div class="who hidden" id="players">
+    <span>Qual jogador você é?</span>
+    <div class="players">
+      <button type="button" class="cta" id="p1">Jogador 1</button>
+      <button type="button" class="cta" id="p2">Jogador 2</button>
+    </div>
   </div>
-  <button type="button" class="cta hidden" id="connect"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#log-in"/></svg> Conectar</button>
   <div id="status" role="status"></div>
 
   <div class="join-links">
     <a href="/admin">Gerenciar ROMs</a>
-    <button id="theme" class="link-btn" type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#sun-moon"/></svg> Tema</button>
+    <button id="openSettings" class="link-btn" type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#settings"/></svg> Configurações</button>
     <button class="link-btn hidden" data-install type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#download"/></svg> Instalar app</button>
   </div>
 </section>
@@ -289,27 +330,35 @@
 </main>
 
 <div id="sheetBack" class="hidden"></div>
+<div id="settings" class="hidden" role="dialog" aria-label="Configurações">
+  <div class="head"><span>Configurações</span><button type="button" id="setClose" class="soft" aria-label="Fechar"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#x"/></svg></button></div>
+  <div class="srow"><span>Tema</span>
+    <div class="seg compact" id="themeSeg" role="group" aria-label="Tema">
+      <button type="button" data-theme-v="auto">Auto</button><button type="button" data-theme-v="light">Claro</button><button type="button" data-theme-v="dark">Escuro</button>
+    </div></div>
+  <div class="srow"><span>Vibração ao tocar</span><button type="button" id="setVib" class="switch" role="switch" aria-checked="true" aria-label="Vibração"></button></div>
+  <div class="srow col"><span>Velocidade do mouse <b id="sensVal"></b></span><input type="range" id="setSens" min="0.8" max="3" step="0.1" aria-label="Velocidade do mouse"></div>
+  <p class="note">Estas preferências ficam salvas neste aparelho (IndexedDB): tema, último modo e jogador, tela do sistema, vibração e velocidade do mouse. O PIN nunca é salvo.</p>
+  <button type="button" id="setClear"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#trash-2"/></svg> Limpar IndexedDB</button>
+</div>
 <div id="menu" class="hidden" role="menu">
   <button type="button" id="mScreen"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#monitor-play"/></svg>Tela do sistema<span class="state" id="mScreenState">desligada</span></button>
-  <button type="button" id="mTheme"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#sun-moon"/></svg>Alternar tema</button>
+  <button type="button" id="mSettings"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#settings"/></svg>Configurações</button>
   <hr>
   <button type="button" id="mExit" class="danger"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#log-out"/></svg>Sair</button>
 </div>
 
+<script src="/static/settings.js"></script>
 <script>
-(() => {
+RPConfig.load().then(() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const joinEl = $('join'), padEl = $('pad'), statusEl = $('status'), pinEl = $('pin');
-  const store = {
-    get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} },
-  };
+  const cfg = RPConfig;
   const ico = (name, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="/static/lucide.svg#${name}"/></svg>`;
 
   const MODES = ['gamepad', 'mouse', 'screen'];
-  let mode = store.get('rp_mode'); if (mode === 'keyboard') mode = 'mouse';
-  if (!MODES.includes(mode)) mode = 'gamepad';
+  let mode = cfg.get('mode');
   let ws = null, player = null, retry = false, inGame = false;
 
   const setStatus = (text) => { statusEl.textContent = text; };
@@ -318,26 +367,18 @@
     const el = $('toast'); el.textContent = text; el.classList.remove('hidden');
     clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), ms);
   }
-  const buzz = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (_) {} };
-
-  // ---------- Tema ----------
-  function toggleTheme() {
-    const root = document.documentElement;
-    const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-    root.dataset.theme = dark ? 'light' : 'dark';
-    store.set('rp_theme', root.dataset.theme);
-  }
-  $('theme').onclick = toggleTheme;
+  const buzz = () => { try { if (cfg.get('vibrate') && navigator.vibrate) navigator.vibrate(8); } catch (_) {} };
 
   // ---------- Tela de entrada ----------
   function paintJoin() {
-    document.querySelectorAll('#modeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
-    const gp = mode === 'gamepad';
-    $('players').classList.toggle('hidden', !gp);
-    $('connect').classList.toggle('hidden', gp);
+    document.querySelectorAll('#launch .tile').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode && !$('players').classList.contains('hidden')));
+    document.querySelectorAll('#players .cta').forEach((b) => b.classList.toggle('last', Number(b.id.slice(1)) === cfg.get('player')));
   }
-  document.querySelectorAll('#modeSeg button').forEach((b) => b.addEventListener('click', () => {
-    mode = b.dataset.mode; store.set('rp_mode', mode); paintJoin();
+  // Mouse e Tela conectam direto (não usam jogador). Só o Gamepad pede para escolher Jogador 1 ou 2.
+  document.querySelectorAll('#launch .tile').forEach((b) => b.addEventListener('click', () => {
+    mode = b.dataset.mode; cfg.set('mode', mode);
+    if (mode === 'gamepad') { $('players').classList.remove('hidden'); paintJoin(); }
+    else { $('players').classList.add('hidden'); paintJoin(); startJoin(null); }
   }));
 
   // ---------- Conexão ----------
@@ -366,12 +407,12 @@
   }
   function startJoin(p) {
     player = p; retry = true; setStatus('Conectando…');
+    if (p) cfg.set('player', p);
     try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); } catch (_) {}
     connect();
   }
   $('p1').onclick = () => startJoin(1);
   $('p2').onclick = () => startJoin(2);
-  $('connect').onclick = () => startJoin(null);
   const wsSend = (obj) => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj)); };
 
   function enterGame() {
@@ -383,7 +424,7 @@
     $('gamepad').classList.toggle('hidden', !gp);
     $('touchpad').classList.toggle('hidden', gp);
     fit();
-    if (mode === 'screen' || store.get('rp_stream') === '1') startStream();
+    if (mode === 'screen' || cfg.get('stream')) startStream();
   }
   function leaveGame() {
     retry = false; inGame = false;
@@ -407,12 +448,43 @@
 
   // ---------- Menu (engrenagem) ----------
   const openMenu = () => { $('sheetBack').classList.remove('hidden'); $('menu').classList.remove('hidden'); paintStream(); };
-  function closeMenu() { $('sheetBack').classList.add('hidden'); $('menu').classList.add('hidden'); }
+  function closeMenu() { $('sheetBack').classList.add('hidden'); $('menu').classList.add('hidden'); closeSettings(); }
   document.querySelectorAll('[data-open-menu]').forEach((b) => b.addEventListener('click', openMenu));
   $('sheetBack').addEventListener('click', closeMenu);
-  $('mTheme').addEventListener('click', () => { toggleTheme(); closeMenu(); });
+  $('mSettings').addEventListener('click', () => { closeMenu(); openSettings(); });
   $('mScreen').addEventListener('click', () => { closeMenu(); toggleStream(); });
   $('mExit').addEventListener('click', () => { closeMenu(); leaveGame(); });
+
+  // ---------- Configurações (salvas no IndexedDB) ----------
+  function paintSettings() {
+    document.querySelectorAll('#themeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.themeV === cfg.get('theme')));
+    $('setVib').setAttribute('aria-checked', String(cfg.get('vibrate')));
+    $('setSens').value = cfg.get('sensitivity');
+    $('sensVal').textContent = Number(cfg.get('sensitivity')).toFixed(1) + '×';
+    resetClearButton();
+  }
+  function openSettings() { paintSettings(); $('sheetBack').classList.remove('hidden'); $('settings').classList.remove('hidden'); }
+  function closeSettings() { $('settings').classList.add('hidden'); if ($('menu').classList.contains('hidden')) $('sheetBack').classList.add('hidden'); resetClearButton(); }
+  $('openSettings').addEventListener('click', openSettings);
+  $('setClose').addEventListener('click', closeSettings);
+  document.querySelectorAll('#themeSeg button').forEach((b) => b.addEventListener('click', () => { cfg.set('theme', b.dataset.themeV); paintSettings(); }));
+  $('setVib').addEventListener('click', () => { cfg.set('vibrate', !cfg.get('vibrate')); paintSettings(); buzz(); });
+  $('setSens').addEventListener('input', (e) => { cfg.set('sensitivity', Number(e.target.value)); $('sensVal').textContent = Number(e.target.value).toFixed(1) + '×'; });
+  // Limpar exige um segundo toque, para não apagar por engano.
+  let clearTimer = 0;
+  function resetClearButton() {
+    clearTimeout(clearTimer); $('setClear').classList.remove('armed');
+    $('setClear').innerHTML = ico('trash-2') + ' Limpar IndexedDB';
+  }
+  $('setClear').addEventListener('click', async () => {
+    if (!$('setClear').classList.contains('armed')) {
+      $('setClear').classList.add('armed'); $('setClear').innerHTML = ico('trash-2') + ' Toque de novo para apagar tudo';
+      clearTimer = setTimeout(resetClearButton, 3000); return;
+    }
+    await cfg.clear();
+    mode = cfg.get('mode'); streaming = streaming && inGame;
+    $('players').classList.add('hidden'); paintJoin(); paintSettings(); toast('Dados salvos apagados');
+  });
 
   // ---------- Gamepad ----------
   const pressed = new Set();
@@ -510,12 +582,12 @@
   }
   function startStream() {
     if (!inGame) return;
-    streaming = true; gotFrame = false; store.set('rp_stream', '1');
+    streaming = true; gotFrame = false; cfg.set('stream', true);
     showMsg('Carregando a tela do sistema…'); msgEl.classList.remove('hidden');
     paintStream(); wsSend({ t: 'stream', on: true });
   }
   function stopStream() {
-    streaming = false; gotFrame = false; store.set('rp_stream', '0');
+    streaming = false; gotFrame = false; cfg.set('stream', false);
     wsSend({ t: 'stream', on: false }); hideMsg(); paintStream();
   }
   const toggleStream = () => (streaming ? stopStream() : startStream());
@@ -542,7 +614,7 @@
 
   // ---------- Touchpad ----------
   const surface = surfaceEl;
-  const SENS = 1.7;                       // velocidade do cursor
+  const sens = () => cfg.get('sensitivity');   // velocidade do cursor
   const TAP_MS = 230, TAP_PX = 9, DRAG_GAP_MS = 320;
   let mx = 0, my = 0, sv = 0, raf = 0;    // acumuladores enviados a cada quadro
   const touches = new Map();              // id -> {x, y, sx, sy, t, moved}
@@ -586,7 +658,7 @@
     ring(e.pointerId, e.clientX, e.clientY);
     if (touches.size === 1) {
       if (!p.moved) return;                    // ignora tremida do dedo parado
-      mx += dx * SENS; my += dy * SENS; queue();
+      mx += dx * sens(); my += dy * sens(); queue();
     } else if (touches.size === 2) {
       if (p.moved) twoMoved = true;
       sv += dy / 14 / 2; queue();              // média dos dois dedos; o conteúdo acompanha os dedos
@@ -677,7 +749,7 @@
 
   paintJoin();
   paintStream();
-})();
+});
 </script>
 <script src="/static/pwa.js" defer></script>
 </body>
