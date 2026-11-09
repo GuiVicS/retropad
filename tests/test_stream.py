@@ -13,9 +13,10 @@ HAS_FFMPEG = shutil.which("ffmpeg") is not None
 SYNTH = "-f lavfi -i testsrc2=size=320x240:rate=15"
 
 
-def cmd(env=None, exists=lambda p: False, **cfg):
+def cmd(env=None, exists=lambda p: False, have=("ffmpeg",), **cfg):
     settings = load_settings({k: str(v) for k, v in cfg.items()})
-    return stream.build_command(settings, env=env or {}, exists=exists, which=lambda n: "/usr/bin/" + n)
+    return stream.build_command(settings, env=env or {}, exists=exists,
+                                which=lambda n: "/usr/bin/" + n if n in have else None)
 
 
 def test_x11_when_display_is_set():
@@ -115,3 +116,89 @@ def test_capture_failure_is_reported_not_hung():
         st.release()
     # depois de liberar, dá para tentar de novo (erro anterior não fica preso)
     assert st._error == "" or st.viewers == 0
+
+
+# --------------------------------------------------------------- dispmanx (raspi2png)
+
+def src(env=None, exists=lambda p: False, have=("ffmpeg",), **cfg):
+    settings = load_settings({k: str(v) for k, v in cfg.items()})
+    return stream.pick_source(settings, env=env or {}, exists=exists, which=lambda n: "/usr/bin/" + n if n in have else None)
+
+
+def test_auto_prefers_dispmanx_over_fbdev_when_raspi2png_is_installed():
+    # /dev/fb0 só mostra o console; o EmulationStation só aparece pelo dispmanx.
+    assert src(exists=lambda p: p == "/dev/fb0", have=("ffmpeg", "raspi2png")) == "dispmanx"
+    assert src(exists=lambda p: p == "/dev/fb0") == "fbdev"             # sem raspi2png, mantém o fbdev
+
+
+def test_x11_still_wins_when_there_is_a_display():
+    assert src(env={"DISPLAY": ":0"}, have=("ffmpeg", "raspi2png")) == "x11"
+
+
+def test_source_can_be_forced():
+    assert src(have=("ffmpeg", "raspi2png"), exists=lambda p: True, RETROPAD_STREAM_SOURCE="fbdev") == "fbdev"
+    assert src(RETROPAD_STREAM_SOURCE="dispmanx") == "dispmanx"
+    assert src(RETROPAD_STREAM_SOURCE="lixo", exists=lambda p: True) == "fbdev"     # valor inválido volta ao automático
+    assert src(RETROPAD_STREAM_INPUT=SYNTH, exists=lambda p: True) == "custom"
+
+
+def test_dispmanx_ffmpeg_reads_png_from_stdin():
+    c = cmd(RETROPAD_STREAM_SOURCE="dispmanx", RETROPAD_STREAM_WIDTH=640, have=("ffmpeg", "raspi2png"))
+    assert c[c.index("-f") + 1] == "image2pipe" and "png" in c and c[c.index("-i") + 1] == "-"
+    assert "scale=640:-2" in c and c[-1] == "-" and "mjpeg" in c
+    # sem isto o primeiro quadro demora ~12 s (o ffmpeg fica sondando a entrada)
+    assert c[c.index("-analyzeduration") + 1] == "0" and "-probesize" in c
+
+
+def test_capture_command_keeps_the_screen_proportions():
+    assert stream.capture_command(load_settings({"RETROPAD_STREAM_WIDTH": "854"}), size=(1920, 1080))[2:6] == ["--width", "854", "--height", "480"]
+    c = stream.capture_command(load_settings({"RETROPAD_STREAM_WIDTH": "854"}), size=(1280, 1024))
+    assert c[c.index("--height") + 1] == "682" and c[0] == "raspi2png" and "--stdout" in c       # 5:4, par
+    # nunca amplia além da tela
+    assert stream.capture_command(load_settings({"RETROPAD_STREAM_WIDTH": "1920"}), size=(640, 480))[3] == "640"
+
+
+def test_screen_size_reads_the_framebuffer_and_has_a_fallback():
+    assert stream.screen_size(read=lambda p: "1920,1080\n") == (1920, 1080)
+    assert stream.screen_size(read=lambda p: (_ for _ in ()).throw(OSError())) == (1920, 1080)
+
+
+def make_fake_raspi2png(tmp_path, fail=False):
+    """Um 'raspi2png' de mentira: gera um PNG de teste (ou falha), para testar o encanamento todo."""
+    script = tmp_path / "raspi2png"
+    if fail:
+        script.write_text("#!/bin/sh\necho 'vc_dispmanx_snapshot falhou (KMS?)' >&2\nexit 3\n")
+    else:
+        script.write_text("#!/bin/sh\nexec ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=320x180:rate=1 -frames:v 1 -f image2pipe -c:v png -\n")
+    script.chmod(0o755)
+    return str(script)
+
+
+@pytest.mark.skipif(not HAS_FFMPEG, reason="ffmpeg não instalado")
+def test_dispmanx_pipeline_delivers_jpegs(tmp_path):
+    fake = make_fake_raspi2png(tmp_path)
+    settings = load_settings({"RETROPAD_STREAM_SOURCE": "dispmanx", "RETROPAD_STREAM_WIDTH": "320", "RETROPAD_STREAM_FPS": "5"})
+    st = stream.Streamer(settings, command_factory=lambda: stream.build_command(
+        settings, env={}, which=lambda n: "/usr/bin/" + n), capture_factory=lambda cmd: [fake])
+    st.acquire()
+    try:
+        seq, frame = st.wait_frame(0, timeout=15)
+        assert frame and frame.startswith(b"\xff\xd8") and frame.endswith(b"\xff\xd9")
+        seq2, frame2 = st.wait_frame(seq, timeout=15)
+        assert seq2 > seq
+    finally:
+        st.release()
+
+
+@pytest.mark.skipif(not HAS_FFMPEG, reason="ffmpeg não instalado")
+def test_dispmanx_failure_is_reported_with_the_tools_own_message(tmp_path):
+    fake = make_fake_raspi2png(tmp_path, fail=True)
+    settings = load_settings({"RETROPAD_STREAM_SOURCE": "dispmanx"})
+    st = stream.Streamer(settings, command_factory=lambda: stream.build_command(
+        settings, env={}, which=lambda n: "/usr/bin/" + n), capture_factory=lambda cmd: [fake])
+    st.acquire()
+    try:
+        with pytest.raises(stream.StreamError, match="falhou.*KMS"):
+            st.wait_frame(0, timeout=15)
+    finally:
+        st.release()

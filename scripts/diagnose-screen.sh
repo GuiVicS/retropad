@@ -86,12 +86,12 @@ RETROPAD_STREAM_FILTER=\"hwdownload,format=bgr0\"
 fi
 if command -v raspi2png >/dev/null; then
   if timeout 15 raspi2png -p "$TMP/snap.png" >/dev/null 2>&1 && [ -s "$TMP/snap.png" ]; then
-    report "raspi2png" "$(measure "" -i "$TMP/snap.png")" "(captura por dispmanx: ainda não é suportada pelo RetroPad, me avise)"
+    report "raspi2png" "$(measure "" -i "$TMP/snap.png")" "(automático: com o raspi2png instalado o RetroPad já usa esta captura)"
   else
     printf '  %-10s  FALHOU  (raspi2png existe mas não gerou imagem)\n' "raspi2png"
   fi
 else
-  printf '  %-10s  não instalado (captura do dispmanx do Pi 0-3)\n' "raspi2png"
+  printf '  %-10s  não instalado (é ele que mostra o EmulationStation nos Pi 0 a 3; veja o README)\n' "raspi2png"
 fi
 
 hr

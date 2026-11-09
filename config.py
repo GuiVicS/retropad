@@ -40,6 +40,7 @@ class Settings:
     stream_fps: int = 12
     stream_width: int = 854       # largura da imagem enviada (altura proporcional)
     stream_quality: int = 6       # JPEG do ffmpeg: 2 (melhor) a 31 (pior)
+    stream_source: str = "auto"   # auto | x11 | dispmanx | fbdev (auto escolhe pelo que o Pi tem)
     stream_input: str = ""        # opções de entrada do ffmpeg; vazio = detecta (x11grab ou fbdev)
     stream_filter: str = ""       # filtro ffmpeg antes do redimensionamento (ex.: para kmsgrab)
 
@@ -77,6 +78,7 @@ def load_settings(env=None):
         stream_fps=max(1, min(30, _int(env, "RETROPAD_STREAM_FPS", 12))),
         stream_width=max(160, min(1920, _int(env, "RETROPAD_STREAM_WIDTH", 854))),
         stream_quality=max(2, min(31, _int(env, "RETROPAD_STREAM_QUALITY", 6))),
+        stream_source=(env.get("RETROPAD_STREAM_SOURCE", "auto").strip().lower() or "auto"),
         stream_input=env.get("RETROPAD_STREAM_INPUT", "").strip(),
         stream_filter=env.get("RETROPAD_STREAM_FILTER", "").strip(),
     )

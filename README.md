@@ -355,10 +355,22 @@ Requisitos: `sudo apt install ffmpeg`. A fonte é detectada sozinha: `x11grab` s
 | `RETROPAD_STREAM_FPS` | `12` | quadros por segundo (1 a 30) |
 | `RETROPAD_STREAM_WIDTH` | `854` | largura enviada, altura proporcional (160 a 1920) |
 | `RETROPAD_STREAM_QUALITY` | `6` | JPEG: 2 (melhor) a 31 (pior) |
+| `RETROPAD_STREAM_SOURCE` | `auto` | `auto`, `x11`, `dispmanx` ou `fbdev` (auto: X se houver `DISPLAY`, senão `raspi2png` se instalado, senão `fbdev`) |
 | `RETROPAD_STREAM_INPUT` | vazio | opções de entrada do ffmpeg para trocar a detecção, ex.: `-f x11grab -framerate 12 -i :0` |
 | `RETROPAD_STREAM_FILTER` | vazio | filtro aplicado antes de reduzir, ex.: `hwdownload,format=bgr0` |
 
-**A tela mostra só o terminal (o EmulationStation não aparece)?** O padrão (`fbdev`, `/dev/fb0`) só enxerga o console de texto. O EmulationStation e os jogos são desenhados pela GPU por outro caminho, que depende do modelo do Pi. Rode o diagnóstico **com o EmulationStation aberto na TV** (por SSH, ou deixe agendado e abra o ES):
+**A tela mostra só o terminal (o EmulationStation não aparece)?** O padrão (`fbdev`, `/dev/fb0`) só enxerga o console de texto. O EmulationStation e os jogos são desenhados pela GPU por outro caminho. No **Pi 0 a 3** (RetroPie Buster) esse caminho é o *dispmanx*, e o programa que o captura é o `raspi2png`. Instale uma vez:
+
+```bash
+sudo apt install -y libpng-dev libraspberrypi-dev git ffmpeg
+git clone https://github.com/AndrewFromMelbourne/raspi2png.git ~/raspi2png
+cd ~/raspi2png && make && sudo make install
+sudo systemctl restart retropad
+```
+
+Pronto: com o `raspi2png` instalado e sem servidor X, o RetroPad já passa a usá-lo **sozinho** no lugar do `fbdev` (ele enxerga o EmulationStation, os jogos e também o console). Para forçar uma fonte: `RETROPAD_STREAM_SOURCE=dispmanx`, `fbdev` ou `x11` em `/etc/retropad.env`. No **Pi 4 com KMS** o dispmanx não existe; use `kmsgrab` (veja abaixo).
+
+Para saber o que funciona no seu Pi, rode o diagnóstico **com o EmulationStation aberto na TV** (por SSH, ou deixe agendado e abra o ES):
 
 ```bash
 cd ~/retropad
@@ -366,7 +378,9 @@ cd ~/retropad
 emulationstation          # espere abrir; depois saia e leia:  cat /tmp/diag.txt
 ```
 
-Ele testa `x11grab`, `fbdev`, `kmsgrab` e `raspi2png`, mede o brilho de um quadro de cada e diz quais mostram a tela de verdade, com as linhas `RETROPAD_STREAM_*` para colocar em `/etc/retropad.env`.
+Ele testa `x11grab`, `fbdev`, `kmsgrab` e `raspi2png`, mede o brilho de um quadro de cada e diz quais mostram a tela de verdade, com as linhas `RETROPAD_STREAM_*` quando for preciso configurar algo.
+
+Sem TV ligada, o Pi desliga o vídeo e não há o que capturar: force o HDMI com `hdmi_force_hotplug=1`, `hdmi_group=1` e `hdmi_mode=4` em `/boot/config.txt` (e reinicie), ou use um plugue HDMI "dummy".
 
 **Por que MJPEG pelo WebSocket (e não H.264/WebRTC)?** Medido aqui, capturando um servidor X real e reduzindo para 854 px a 12 fps: MJPEG gastou ~2,6 Mbit/s e ~10% de um núcleo; H.264 (`libx264 ultrafast`) ~1,5 Mbit/s e ~13%. Ou seja, H.264 economiza só ~40% de banda, não poupa CPU e ainda exige `MediaSource` no navegador (o iPhone só tem em versões recentes), mais latência de GOP e mais código. No MJPEG cada quadro é independente: quadros atrasados são descartados sem borrar a imagem, a conexão se recupera na hora, e funciona em qualquer navegador e através do túnel ngrok com o mesmo PIN. Numa tela parada (menu do EmulationStation) gasta cerca de 1 Mbit/s. Se a banda ou a CPU do Pi apertarem, baixe `RETROPAD_STREAM_FPS` e `RETROPAD_STREAM_WIDTH`. Testei também descartar quadros repetidos com o filtro `mpdecimate`: ele não entregou quadro nenhum, então **não** é usado.
 
