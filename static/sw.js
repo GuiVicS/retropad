@@ -1,11 +1,11 @@
 /* Service worker do RetroPad: guarda a "casca" do app para abrir rápido e funcionar
  * como PWA instalado. Nunca guarda /api nem /ws (dados e controle são sempre ao vivo).
  * Servido em /sw.js (raiz) pelo server.py para poder controlar "/" e "/admin". */
-const VERSION = 'retropad-v1';
+const VERSION = 'retropad-v4';
 const SHELL = [
   '/', '/admin',
   '/static/theme.css', '/static/admin.css', '/static/app.js', '/static/pwa.js',
-  '/static/manifest.json',
+  '/static/manifest.json', '/static/lucide.svg',
   '/static/icons/icon-192.png', '/static/icons/icon-512.png', '/static/icons/apple-touch-icon.png',
 ];
 

@@ -179,5 +179,9 @@ def test_manifest_is_installable():
 @pytest.mark.parametrize("page", ["index.html", "admin.html"])
 def test_pages_link_pwa_assets(page):
     html = open(os.path.join(STATIC, page), encoding="utf-8").read()
-    for needle in ('rel="manifest"', 'rel="apple-touch-icon"', "/static/pwa.js", "/static/theme.css", 'data-install'):
+    # O controle (index) tem tema próprio embutido; o admin usa o theme.css compartilhado.
+    needles = ['rel="manifest"', 'rel="apple-touch-icon"', "/static/pwa.js", 'data-install']
+    if page == "admin.html":
+        needles.append("/static/theme.css")
+    for needle in needles:
         assert needle in html, (page, needle)

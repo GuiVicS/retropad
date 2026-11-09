@@ -19,9 +19,9 @@
 <header class="top">
   <a class="brand" href="/admin">RetroPad <span>ROMs</span></a>
   <div class="top-actions">
-    <button class="btn ghost hidden" data-install type="button">⬇ Instalar</button>
-    <a class="btn ghost" href="/">Controle</a>
-    <button class="btn ghost icon" id="theme" type="button" aria-label="Alternar tema">◐</button>
+    <button class="btn ghost hidden" data-install type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#download"/></svg> Instalar</button>
+    <a class="btn ghost" href="/"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg> Controle</a>
+    <button class="btn ghost icon" id="theme" type="button" aria-label="Alternar tema"></button>
   </div>
 </header>
 
@@ -41,7 +41,7 @@
   <!-- Sistemas e espaço livre -->
   <section id="systems" class="hidden">
     <div class="card" id="disk">
-      <div class="row between"><strong>Cartão SD</strong><span id="disk-text" class="muted"></span></div>
+      <div class="row between"><strong><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#hard-drive"/></svg> Cartão SD</strong><span id="disk-text" class="muted"></span></div>
       <div class="meter"><div id="disk-bar"></div></div>
       <p id="tunnel" class="muted small hidden"></p>
     </div>
@@ -52,14 +52,14 @@
   <!-- ROMs de um sistema -->
   <section id="roms" class="hidden">
     <div class="row">
-      <button class="btn ghost" id="back" type="button">← Sistemas</button>
+      <button class="btn ghost" id="back" type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#arrow-left"/></svg> Sistemas</button>
     </div>
     <h1 id="roms-title"></h1>
 
     <div class="card">
       <div class="row between wrap">
         <label class="btn primary file">
-          Enviar ROMs
+          <svg class="i" aria-hidden="true"><use href="/static/lucide.svg#upload"/></svg> Enviar ROMs
           <input id="file" type="file" multiple>
         </label>
         <span id="disk-mini" class="muted"></span>

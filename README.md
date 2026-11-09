@@ -289,6 +289,39 @@ Cobrem nomes, extensões, path traversal, limite de tamanho, espaço livre, assi
 
 Para instalar e configurar o serviço para iniciar junto com o Raspberry, siga a [etapa de inicialização automática](#5-configurar-a-inicialização-automática) do guia de instalação acima.
 
+## Modos: Gamepad, Mouse e Tela
+
+Na tela inicial escolha o modo:
+
+- **Gamepad:** um único controle universal (serve para qualquer console): L1/L2, R1/R2, dois analógicos com L3/R3, D-pad, SELECT/START e ABXY. Um controle virtual por jogador (Jogador 1 e 2). O mapeamento é de gamepad Xbox 360, então o RetroArch reconhece sozinho.
+- **Mouse:** a tela inteira vira um touchpad pontilhado. Arraste para mover, toque para clicar, toque com dois dedos para o clique direito, arraste com dois dedos para rolar. Toque e logo em seguida arraste para segurar o botão (arrastar janelas, selecionar texto). O botão flutuante de teclado abre o **teclado nativo do celular**: o que você digita aparece no PC. Junto vem uma folha com as teclas que o celular não tem: Esc, Tab, Home, End, PgUp, PgDn, Ins, Win, Ctrl, Alt, Shift, setas e, pelo botão **Fn**, F1 a F12. Ctrl, Alt, Shift e Win valem para a próxima tecla ou letra (ex.: toque em Ctrl e digite `c`).
+- **Tela:** o mesmo touchpad, já mostrando a tela do Raspberry (veja abaixo).
+
+A engrenagem (canto superior direito) abre o menu: ligar/desligar a tela do sistema, trocar o tema e sair.
+
+Mouse e teclado viram dispositivos virtuais (`RetroPad Mouse` e `RetroPad Teclado`) via uinput, então funcionam em qualquer programa do Raspberry. **Limitação:** o texto é convertido para teclas do layout US. Caracteres que dependem do layout do PC (como `ç`, `ã`, `é`) são ignorados em vez de digitar a tecla errada. Letras, números e símbolos como `! ? @ #` funcionam normalmente.
+
+## Tela do sistema (streaming)
+
+No modo **Tela** (ou pelo menu da engrenagem em qualquer modo) o celular mostra a tela do Raspberry em tempo real. No Gamepad a imagem fica atrás dos botões (que ficam translúcidos); no Mouse ela aparece dentro do touchpad, então dá para controlar o PC olhando só o celular.
+
+Como funciona: o `ffmpeg` captura a tela, reduz e manda JPEGs pelo mesmo WebSocket do controle (mesmo PIN, mesmo túnel). **O ffmpeg só roda enquanto alguém assiste** e para quando o último celular sai, então não gasta CPU à toa.
+
+Requisitos: `sudo apt install ffmpeg`. A fonte é detectada sozinha: `x11grab` se houver `DISPLAY` (desktop/X) e `fbdev` (`/dev/fb0`) caso contrário. Variáveis (todas opcionais):
+
+| Variável | Padrão | O que faz |
+|---|---|---|
+| `RETROPAD_STREAM` | `1` | `0` desliga a transmissão |
+| `RETROPAD_STREAM_FPS` | `12` | quadros por segundo (1 a 30) |
+| `RETROPAD_STREAM_WIDTH` | `854` | largura enviada, altura proporcional (160 a 1920) |
+| `RETROPAD_STREAM_QUALITY` | `6` | JPEG: 2 (melhor) a 31 (pior) |
+| `RETROPAD_STREAM_INPUT` | vazio | opções de entrada do ffmpeg para trocar a detecção, ex.: `-f x11grab -framerate 12 -i :0` |
+| `RETROPAD_STREAM_FILTER` | vazio | filtro aplicado antes de reduzir, ex.: `hwdownload,format=bgr0` |
+
+No Raspberry Pi, o RetroArch com driver KMS/DRM nem sempre aparece no `/dev/fb0` (a imagem sai preta). Nesse caso tente captura por KMS, que costuma exigir rodar o servidor como root: `RETROPAD_STREAM_INPUT="-f kmsgrab -i -"` com `RETROPAD_STREAM_FILTER="hwdownload,format=bgr0"`. Essa combinação depende do modelo do Pi e do driver; teste no seu aparelho.
+
+**Atenção à privacidade:** quem tem o PIN do controle também vê a tela. Defina `RETROPAD_PIN` e não exponha o servidor na internet sem o túnel com PIN. Reduza `RETROPAD_STREAM_FPS`/`WIDTH` se o Pi sentir o peso (a codificação usa CPU).
+
 ## Instalando como app no celular
 
 Veja "PWA e ngrok". Resumo: abra o endereço **https** do túnel e use "Instalar app" (Android) ou Compartilhar → "Adicionar à Tela de Início" (iPhone). Pelo IP em `http://` o app funciona, mas sem a instalação completa.
@@ -297,7 +330,8 @@ Veja "PWA e ngrok". Resumo: abra o endereço **https** do túnel e use "Instalar
 
 - **Segurança:** o servidor fica aberto na rede local. Use PINs e não faça redirecionamento de porta no roteador. Para acesso de fora, use só o túnel ngrok, com as travas descritas acima.
 - **Latência:** WebSocket na mesma Wi-Fi costuma ficar entre 10 e 30 ms. Se houver atraso, use 5 GHz ou cabo no roteador.
-- **Orientação:** no modo retrato, a página mostra "gire o celular" e esconde o controle. Isso é feito por CSS, porque o iOS não aceita bloqueio de orientação de forma confiável.
-- **Vibração:** não implementada. A API `navigator.vibrate` existe só no Android.
+- **Orientação:** no modo Gamepad e em retrato, a página mostra "gire o celular" e esconde o controle (Mouse e Tela funcionam nos dois sentidos). Isso é feito por CSS, porque o iOS não aceita bloqueio de orientação de forma confiável.
+- **Ícones:** são do [Lucide](https://lucide.dev) (licença ISC), em um sprite local `static/lucide.svg`, sem CDN, então funcionam offline.
+- **Vibração:** os botões vibram de leve no Android (`navigator.vibrate`); o iOS não tem essa API.
 - **Visual:** o tema vem do tweakcn (neo-brutalista, roxo e creme), com modo claro e escuro (botão ☀/☾; sem escolha, segue o sistema). Para trocar, edite `static/theme.css`.
 - **Diagnóstico:** se a página conectar mas nada acontecer, veja o log do servidor. Erros de `/dev/uinput` aparecem ali.

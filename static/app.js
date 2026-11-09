@@ -24,6 +24,17 @@
     return el;
   }
 
+  // Ícones Lucide (sprite local em /static/lucide.svg, funciona offline)
+  function icon(name) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'i'); svg.setAttribute('aria-hidden', 'true');
+    const use = document.createElementNS(NS, 'use');
+    use.setAttribute('href', '/static/lucide.svg#' + name);
+    svg.append(use);
+    return svg;
+  }
+
   function fmtSize(n) {
     if (n < 1024) return `${n} B`;
     const units = ['KB', 'MB', 'GB', 'TB'];
@@ -136,7 +147,7 @@
           class: 'sys' + (s.configured ? '' : ' unconfigured'), type: 'button',
           onclick: () => { location.hash = '#/' + s.id; },
         },
-        h('b', {}, s.name),
+        h('b', {}, icon('gamepad-2'), ' ', s.name),
         h('span', { class: 'muted' }, s.configured
           ? `${plural(s.count, 'arquivo', 'arquivos')} · ${fmtSize(s.size)}`
           : 'sem extensões em systems.json'))));
@@ -191,8 +202,8 @@
           h('div', { class: 'name' }, r.name),
           h('div', { class: 'meta' }, `${fmtSize(r.size)} · ${fmtDate(r.mtime)}`)),
         h('div', { class: 'actions' },
-          h('button', { class: 'btn small', type: 'button', onclick: () => renameRom(r) }, 'Renomear'),
-          h('button', { class: 'btn small danger', type: 'button', onclick: () => deleteRom(r) }, 'Apagar')))));
+          h('button', { class: 'btn small', type: 'button', onclick: () => renameRom(r) }, icon('pencil'), 'Renomear'),
+          h('button', { class: 'btn small danger', type: 'button', onclick: () => deleteRom(r) }, icon('trash-2'), 'Apagar')))));
   }
 
   async function refreshRoms() {
@@ -305,7 +316,7 @@
     ? root.dataset.theme === 'dark'
     : matchMedia('(prefers-color-scheme: dark)').matches;
   function paintThemeButton() {
-    $('theme').textContent = isDark() ? '☾' : '☀';
+    $('theme').replaceChildren(icon(isDark() ? 'moon' : 'sun'));
     $('theme').title = isDark() ? 'Modo escuro (toque para o claro)' : 'Modo claro (toque para o escuro)';
   }
   const saved = store.get('localStorage', 'rp_theme');

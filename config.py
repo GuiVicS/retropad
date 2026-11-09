@@ -35,6 +35,13 @@ class Settings:
     ngrok_domain: str = ""        # domínio fixo (ex.: meu-retropad.ngrok-free.app); vazio = aleatório
     ngrok_allow_admin: bool = False   # False: /admin e /api só na rede local
     url_file: str = os.path.join(BASE_DIR, "logs", "tunnel_url.txt")
+    # Transmissão da tela do Raspberry para o celular
+    stream: bool = True
+    stream_fps: int = 12
+    stream_width: int = 854       # largura da imagem enviada (altura proporcional)
+    stream_quality: int = 6       # JPEG do ffmpeg: 2 (melhor) a 31 (pior)
+    stream_input: str = ""        # opções de entrada do ffmpeg; vazio = detecta (x11grab ou fbdev)
+    stream_filter: str = ""       # filtro ffmpeg antes do redimensionamento (ex.: para kmsgrab)
 
     @property
     def max_upload_bytes(self):
@@ -66,6 +73,12 @@ def load_settings(env=None):
         ngrok_domain=env.get("RETROPAD_NGROK_DOMAIN", "").strip().replace("https://", "").rstrip("/"),
         ngrok_allow_admin=_flag(env, "RETROPAD_NGROK_ADMIN"),
         url_file=env.get("RETROPAD_URL_FILE", os.path.join(BASE_DIR, "logs", "tunnel_url.txt")),
+        stream=str(env.get("RETROPAD_STREAM", "1")).strip().lower() not in ("0", "false", "no", "nao", "não", "off"),
+        stream_fps=max(1, min(30, _int(env, "RETROPAD_STREAM_FPS", 12))),
+        stream_width=max(160, min(1920, _int(env, "RETROPAD_STREAM_WIDTH", 854))),
+        stream_quality=max(2, min(31, _int(env, "RETROPAD_STREAM_QUALITY", 6))),
+        stream_input=env.get("RETROPAD_STREAM_INPUT", "").strip(),
+        stream_filter=env.get("RETROPAD_STREAM_FILTER", "").strip(),
     )
 
 

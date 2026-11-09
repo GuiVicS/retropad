@@ -2,833 +2,704 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#a855f7">
+<meta name="theme-color" content="#f8e8dc">
 <link rel="manifest" href="/static/manifest.json">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="RetroPad">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="/static/theme.css">
 <script>try{var t=localStorage.getItem("rp_theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <title>RetroPad</title>
 <style>
-  :root { --s: min(24vh, 17vw); }
+  /* ---------- Tema pêssego (claro) e chocolate (escuro) ---------- */
+  :root {
+    --bg: #f8e8dc; --panel: #f7e4d6; --line: #e2c7b4; --ink: #6b402c; --muted: #a67f6b;
+    --brown: #8a5b45; --brown-d: #66402e; --on-brown: #fff6ee;
+    --hi: #fff7f0; --lo: #f1d9c9; --dot: rgba(138, 91, 69, 0.26); --shade: rgba(120, 70, 45, 0.28);
+    --danger: #b4432f;
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #231710; --panel: #2c1d15; --line: #4a3326; --ink: #f2d9c8; --muted: #b68f78;
+      --brown: #c68e72; --brown-d: #a8725a; --on-brown: #2a1810;
+      --hi: #4e3a2e; --lo: #3a2a20; --dot: rgba(242, 217, 200, 0.2); --shade: rgba(0, 0, 0, 0.5);
+      --danger: #e07a64; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #231710; --panel: #2c1d15; --line: #4a3326; --ink: #f2d9c8; --muted: #b68f78;
+    --brown: #c68e72; --brown-d: #a8725a; --on-brown: #2a1810;
+    --hi: #4e3a2e; --lo: #3a2a20; --dot: rgba(242, 217, 200, 0.2); --shade: rgba(0, 0, 0, 0.5);
+    --danger: #e07a64; color-scheme: dark;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body {
-    height: 100%; background: var(--bg); color: var(--text);
-    font-family: var(--font);
-    overflow: hidden; touch-action: none;
-    user-select: none; -webkit-user-select: none;
+    height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font);
+    overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
   }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
   .hidden { display: none !important; }
+  .i { width: 1.2em; height: 1.2em; flex: none; vertical-align: -0.22em; pointer-events: none;
+       fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .i.fill { fill: currentColor; }
 
-  /* Tela de entrada */
-  #join {
-    height: 100%; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 16px; padding: 20px; text-align: center;
-  }
-  #join h1 { font-size: 1.8rem; letter-spacing: -0.03em; }
-  #join input {
-    font-size: 1.1rem; padding: 12px; width: 220px; text-align: center;
-    border-radius: 999px; border: 2px solid var(--border); background: var(--input); color: var(--text);
-  }
-  #join .players { display: flex; gap: 14px; }
-  #join button {
-    font: inherit; font-weight: 700; font-size: 1.2rem; padding: 16px 26px; min-width: 130px;
-    border: 2px solid var(--border); border-radius: 999px; box-shadow: var(--shadow-md);
-    background: var(--primary); color: var(--primary-foreground);
-  }
-  #join button:active { transform: translate(3px, 3px); box-shadow: none; }
-  #join button.themebtn { min-width: 0; font-size: 0.95rem; padding: 8px 18px; background: var(--card); color: var(--card-foreground); box-shadow: none; }
-  #join .admin { color: var(--muted-foreground); font-size: 0.95rem; }
-  #status { min-height: 1.2em; color: var(--danger-text); font-weight: 600; font-size: 0.95rem; }
-
-  /* Aviso de rotação */
-  #rotate {
-    position: fixed; inset: 0; background: var(--bg); display: none;
-    align-items: center; justify-content: center; text-align: center;
-    font-size: 1.2rem; padding: 20px; z-index: 10;
-  }
-  body.game #rotate { display: none; }
-  @media (orientation: portrait) {
-    body.game #rotate { display: flex; }
-  }
-
-  /* Controle - modo gamepad */
-  #pad {
-    position: fixed; inset: 0;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right)
-             env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
-  .btn {
-    position: absolute; display: flex; align-items: center; justify-content: center;
-    background: var(--card); border: 3px solid var(--border); color: var(--card-foreground);
-    box-shadow: 3px 3px 0 var(--shadow-color);
-    font-weight: 800; font-size: calc(var(--s) * 0.32);
-  }
-  .btn.on { background: var(--primary); color: var(--primary-foreground); box-shadow: none; }
-
-  /* Ombros */
-  .shoulder {
-    width: calc(var(--s) * 2.2); height: calc(var(--s) * 0.6);
-    border-radius: 999px; top: 4%;
-  }
-  .shoulder.l { left: 3%; }
-  .shoulder.r { right: 3%; }
-
-  /* D-pad: 3x3 em cruz */
-  #dpad { position: absolute; left: 3%; bottom: 6%; width: calc(var(--s) * 3); height: calc(var(--s) * 3); }
-  #dpad .btn { width: var(--s); height: var(--s); border-radius: 12px; }
-  #dpad .up    { left: var(--s); top: 0; }
-  #dpad .down  { left: var(--s); top: calc(var(--s) * 2); }
-  #dpad .left  { left: 0; top: var(--s); }
-  #dpad .right { left: calc(var(--s) * 2); top: var(--s); }
-
-  /* ABXY em losango */
-  #abxy { position: absolute; right: 3%; bottom: 6%; width: calc(var(--s) * 3); height: calc(var(--s) * 3); }
-  #abxy .btn { width: var(--s); height: var(--s); border-radius: 50%; }
-  #abxy .x { left: var(--s); top: 0; }
-  #abxy .y { left: 0; top: var(--s); }
-  #abxy .b { left: calc(var(--s) * 2); top: var(--s); }
-  #abxy .a { left: var(--s); top: calc(var(--s) * 2); }
-
-  /* Select / Start */
-  #center { position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%); display: flex; gap: 18px; }
-  #center .btn { position: relative; width: calc(var(--s) * 1.3); height: calc(var(--s) * 0.5); border-radius: 999px; font-size: calc(var(--s) * 0.22); }
-
-  /* =========================
-     ESTILO MODO MOUSE
-     ========================= */
-  .mode-mouse #pad {
-    /* No modo mouse, o padding é ajustado */
-  }
-  .mode-mouse .mouse-cursor {
-    width: calc(var(--s) * 0.8); height: calc(var(--s) * 0.8);
-    position: absolute; top: 10%; left: 50%;
-    transform: translateX(-50%);
-    border: 3px solid var(--primary);
-    border-radius: 50%;
-    background: var(--primary);
-    pointer-events: none;
-    z-index: 10;
-  }
-  .mode-mouse .mouse-cursor::after {
-    content: '';
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 0; height: 0;
-    border: 10px solid transparent;
-    border-left-color: var(--bg);
-  }
-  .mode-mouse .mouse-area {
-    width: 100%; height: 100%;
-    touch-action: pan-y pan-x;
-  }
-  .mode-mouse .btn-mouse {
-    position: absolute; width: calc(var(--s) * 1.5); height: calc(var(--s) * 0.7);
-    background: var(--card); border: 3px solid var(--border); color: var(--card-foreground);
-    box-shadow: 3px 3px 0 var(--shadow-color); font-weight: 700; font-size: calc(var(--s) * 0.24);
-    border-radius: 12px; touch-action: none;
-  }
-  .mode-mouse .btn-left {
-    left: 3%; top: 85%; transform: translateY(-50%);
-  }
-  .mode-mouse .btn-right {
-    right: 3%; top: 85%; transform: translateY(-50%);
-  }
-  .mode-mouse .btn-scroll {
-    left: 50%; top: 85%; transform: translateX(-50%); margin-left: calc(var(--s) * 0.5);
-    width: calc(var(--s) * 1); height: calc(var(--s) * 0.5);
-  }
-
-  /* =========================
-     ESTILO MODO TECLADO
-     ========================= */
-  .mode-keyboard #pad {
-    background: var(--bg);
-  }
-  .mode-keyboard .keyboard-row {
-    display: flex; justify-content: center; margin: calc(var(--s) * 0.3) 0;
-    touch-action: none;
-  }
-  .mode-keyboard .key {
-    width: calc(var(--s) * 0.8); height: calc(var(--s) * 0.6);
-    margin: 0 2px;
-    background: var(--card); border: 3px solid var(--border); color: var(--card-foreground);
-    box-shadow: 2px 2px 0 var(--shadow-color); border-radius: 8px; font-size: calc(var(--s) * 0.24);
+  /* Botão "macio": relevo claro, vira marrom quando pressionado */
+  .soft {
+    background: linear-gradient(180deg, var(--hi), var(--lo)); color: var(--ink);
+    border: 1.5px solid var(--line);
+    box-shadow: 0 0.7vh 1.5vh var(--shade), inset 0 1px 0 rgba(255, 255, 255, 0.55);
     touch-action: none; user-select: none; -webkit-user-select: none;
   }
-  .mode-keyboard .key-on { background: var(--primary); color: var(--primary-foreground); box-shadow: none; }
-  .mode-keyboard .key-space { width: calc(var(--s) * 3.2); margin: 0 0.5px; }
-  .mode-keyboard .key-enter { width: calc(var(--s) * 1.5); }
+  .soft.on, .soft:active {
+    background: linear-gradient(180deg, var(--brown), var(--brown-d)); color: var(--on-brown);
+    box-shadow: inset 0 0.7vh 1.4vh rgba(0, 0, 0, 0.3); transform: translateY(1px);
+  }
+  .dark { background: linear-gradient(180deg, var(--brown), var(--brown-d)); color: var(--on-brown); border-color: transparent; }
+  .dark.on { filter: brightness(0.82); }
 
-  /* =========================
-     ESTILO MODO GAMEPAD (padrão)
-     ========================= */
-  .mode-gamepad .shoulder.l { left: 2%; }
-  .mode-gamepad .shoulder.r { right: 2%; }
-  .mode-gamepad #dpad { bottom: 5%; }
-  .mode-gamepad #abxy { bottom: 5%; }
-  .mode-gamepad #center { bottom: 5%; }
+  /* ---------- Tela de entrada ---------- */
+  #join {
+    height: 100%; overflow-y: auto; touch-action: pan-y; text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    padding: max(16px, env(safe-area-inset-top)) 20px max(16px, env(safe-area-inset-bottom));
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; }
+  .logo .i { width: 1.35em; height: 1.35em; color: var(--brown); }
+  #pin {
+    font: inherit; font-size: 1.05rem; padding: 12px 16px; width: min(280px, 80vw); text-align: center;
+    border-radius: 999px; border: 1.5px solid var(--line); background: var(--hi); color: var(--ink);
+    box-shadow: inset 0 2px 5px var(--shade); user-select: text; -webkit-user-select: text;
+  }
+  #pin::placeholder { color: var(--muted); }
+  #pin:focus-visible, .seg button:focus-visible, .cta:focus-visible, .link-btn:focus-visible { outline: 3px solid var(--brown); outline-offset: 2px; }
+  .seg { display: flex; padding: 4px; border-radius: 999px; background: var(--panel); border: 1.5px solid var(--line); box-shadow: inset 0 2px 5px var(--shade); }
+  .seg button { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; color: var(--muted); }
+  .seg button.on { background: linear-gradient(180deg, var(--brown), var(--brown-d)); color: var(--on-brown); box-shadow: 0 3px 8px var(--shade); }
+  .players { display: flex; gap: 14px; }
+  .cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-weight: 800; font-size: 1.1rem; padding: 14px 26px; min-width: 140px; border-radius: 999px;
+    background: linear-gradient(180deg, var(--brown), var(--brown-d)); color: var(--on-brown);
+    box-shadow: 0 6px 14px var(--shade), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .cta:active { transform: translateY(2px); box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3); }
+  #status { min-height: 1.2em; color: var(--danger); font-weight: 700; font-size: 0.95rem; }
+  .join-links { display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; justify-content: center; color: var(--muted); }
+  .join-links a { color: var(--muted); font-size: 0.95rem; }
+  .link-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; color: var(--ink); background: var(--panel); border: 1.5px solid var(--line); }
+  @media (max-height: 460px) {
+    #join { gap: 9px; }
+    .logo { font-size: 1.3rem; }
+    .cta { padding: 10px 24px; font-size: 1rem; }
+    .seg button { padding: 8px 16px; }
+  }
 
-  /* Seletor de modo */
-  .mode-selector {
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-    background: var(--card); border: 3px solid var(--border); border-radius: 16px;
-    padding: 12px 24px; z-index: 5; min-width: 200px; text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    margin-bottom: 0;
+  /* ---------- Base do controle ---------- */
+  #rotate {
+    position: fixed; inset: 0; background: var(--bg); display: none; z-index: 30;
+    align-items: center; justify-content: center; flex-direction: column; gap: 14px; text-align: center;
+    font-size: 1.15rem; font-weight: 700; padding: 20px; color: var(--ink);
   }
-  .mode-selector select {
-    width: 100%; padding: 8px; font-size: 1rem; border: none; margin-top: 8px;
-    background: var(--bg); color: var(--text);
-    appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22290%22%20height%3D%22290%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M%204%205h21L23%20142H5z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M%205%205v21l21-5H5z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E");
-    background-repeat: no-repeat; background-size: 15px; background-position: right 10px top 50%;
-  }
-  .mode-selector option {
-    background: var(--bg); color: var(--text);
+  #rotate .i { width: 2.6em; height: 2.6em; color: var(--brown); }
+  @media (orientation: portrait) { body.game.m-gamepad #rotate { display: flex; } }
+  #pad { position: fixed; left: 0; right: 0; top: 0; height: 100%; }
+  .screen { position: absolute; inset: 0; }
+  #toast {
+    position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 40; pointer-events: none;
+    background: var(--brown-d); color: var(--on-brown); padding: 7px 16px; border-radius: 999px; font-weight: 700; font-size: 0.85rem;
   }
 
-  /* Responsividade: esconder seletor de modo em telas muito pequenas */
-  @media (max-width: 400px) {
-    .mode-selector { display: none; top: auto; bottom: 20; left: auto; right: 20; transform: none; }
+  /* ---------- Gamepad universal (um só layout) ---------- */
+  #gamepad { z-index: 1; background-image: radial-gradient(circle, var(--dot) 1px, transparent 1.4px); background-size: 3.2vh 3.2vh; }
+  #gamepad > * { position: absolute; }
+  .sh { display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 3.6vh; }
+  .sh.l2, .sh.r2 { top: 4vh; width: 32vh; height: 10vh; border-radius: 3vh 3vh 5vh 5vh; }
+  .sh.l1, .sh.r1 { top: 12.4vh; width: 30vh; height: 9vh; border-radius: 4.5vh; z-index: 1; }
+  .sh.l2 { left: 5vw; } .sh.l1 { left: 4vw; }
+  .sh.r2 { right: 6vw; } .sh.r1 { right: 4vw; }
+  .gear { top: 2.5vh; right: 1.5vw; width: 9vh; height: 9vh; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 3; }
+  .gear .i { width: 4.6vh; height: 4.6vh; }
+
+  .stick {
+    width: 31vh; height: 31vh; border-radius: 50%; touch-action: none;
+    background: radial-gradient(circle at 50% 40%, var(--lo), var(--hi) 75%);
+    border: 1.5px solid var(--line); box-shadow: inset 0 1vh 2vh var(--shade);
   }
+  .stick.l { left: 3.5vw; top: 29vh; } .stick.r { right: 6vw; bottom: 3vh; }
+  .stick .knob {
+    position: absolute; left: 50%; top: 50%; width: 66%; height: 66%; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle at 50% 35%, #8f6450, var(--brown-d) 80%); border: 0.9vh solid var(--brown-d);
+    box-shadow: 0 1vh 2vh var(--shade), inset 0 0 0 1.2vh rgba(255, 235, 220, 0.12);
+    transform: translate(calc(-50% + var(--kx, 0px)), calc(-50% + var(--ky, 0px)));
+  }
+  .stick .knob::after { content: ''; position: absolute; inset: 18%; border-radius: 50%; background: radial-gradient(circle at 50% 30%, #a77a64, #7a4f3b); box-shadow: inset 0 0.5vh 1vh rgba(0,0,0,0.25); }
+  .mini { width: 8vh; height: 8vh; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 2.6vh; }
+  .mini.l3 { left: calc(3.5vw + 33vh); top: 53vh; } .mini.r3 { right: calc(4.5vw + 34vh); top: 55vh; }
+
+  #dpad { left: 5vw; bottom: 3vh; width: 31vh; height: 31vh; touch-action: none; }
+  #dpad .arm { position: absolute; border-radius: 2vh; pointer-events: none; }
+  #dpad .arm.v { left: 33%; top: 0; width: 34%; height: 100%; }
+  #dpad .arm.h { left: 0; top: 33%; width: 100%; height: 34%; }
+  #dpad .arm.h { z-index: 0; }
+  #dpad .cover { position: absolute; left: 31.5%; top: 31.5%; width: 37%; height: 37%; border-radius: 1.4vh; background: linear-gradient(180deg, var(--hi), var(--lo)); pointer-events: none; z-index: 1; }
+  #dpad .tri { position: absolute; width: 4.2vh; height: 4.2vh; z-index: 2; color: var(--brown-d); transition: color .05s; pointer-events: none; fill: currentColor; stroke-width: 1.5; }
+  #dpad .tri.on { color: var(--danger); }
+  #dpad .tri.up { left: calc(50% - 2.1vh); top: 5%; } #dpad .tri.down { left: calc(50% - 2.1vh); bottom: 5%; transform: rotate(180deg); }
+  #dpad .tri.left { top: calc(50% - 2.1vh); left: 5%; transform: rotate(-90deg); } #dpad .tri.right { top: calc(50% - 2.1vh); right: 5%; transform: rotate(90deg); }
+
+  .face { right: 4.5vw; top: 31vh; display: grid; grid-template: repeat(3, 9.8vh) / repeat(3, 9.8vh); }
+  .face .btn { width: 12.4vh; height: 12.4vh; place-self: center; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 4.4vh; }
+  .face .y { grid-area: 1 / 2; } .face .x { grid-area: 2 / 1; } .face .b { grid-area: 2 / 3; } .face .a { grid-area: 3 / 2; }
+
+  .pills { left: 50%; bottom: 4vh; transform: translateX(-50%); display: flex; gap: 3.5vh; }
+  .pill { display: flex; align-items: center; justify-content: center; gap: 1.6vh; width: 27vh; height: 9vh; border-radius: 4.5vh; font-weight: 800; font-size: 3vh; letter-spacing: 0.02em; }
+  .pill .i { width: 3.4vh; height: 3.4vh; }
+
+  /* Feixe de vídeo (streaming) */
+  .feed { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; display: none; pointer-events: none; }
+  #screenFull { z-index: 0; }
+  body.stream.m-gamepad #screenFull { display: block; }
+  body.live.m-gamepad #gamepad { background-image: none; background-color: transparent; }
+  body.live.m-gamepad #gamepad .soft, body.live.m-gamepad .stick { opacity: 0.6; }
+  body.live.m-gamepad #gamepad .soft.on { opacity: 1; }
+  body.live.m-gamepad .gear { opacity: 0.9 !important; }
+
+  /* ---------- Menu da engrenagem ---------- */
+  #sheetBack { position: fixed; inset: 0; z-index: 50; background: rgba(40, 20, 10, 0.35); }
+  #menu {
+    position: fixed; z-index: 51; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); width: min(300px, 86vw);
+    background: var(--bg); border: 1.5px solid var(--line); border-radius: 22px; padding: 8px; box-shadow: 0 14px 40px var(--shade);
+  }
+  #menu button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; border-radius: 14px; font-weight: 700; font-size: 1rem; text-align: left; color: var(--ink); }
+  #menu button:active, #menu button.on { background: var(--panel); }
+  #menu button .state { margin-left: auto; font-size: 0.78rem; color: var(--muted); }
+  #menu button.danger { color: var(--danger); }
+  #menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 8px; }
+
+  #streamMsg {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 35; max-width: min(92vw, 520px);
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 18px; border-radius: 22px; line-height: 1.4;
+    background: var(--bg); color: var(--ink); border: 1.5px solid var(--line); box-shadow: 0 10px 30px var(--shade); font-weight: 700; font-size: 0.88rem;
+  }
+  #streamMsg.err { background: var(--danger); color: #fff; border-color: transparent; }
+  #streamMsg button { white-space: nowrap; flex: none; padding: 7px 14px; border-radius: 999px; background: var(--bg); color: var(--ink); font-weight: 800; }
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+  /* ---------- Mouse (touchpad) + teclado ---------- */
+  #touchpad { display: flex; flex-direction: column; gap: 10px; padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+  #surface {
+    position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none; border-radius: 26px;
+    background-color: var(--panel); border: 1.5px solid var(--line);
+    background-image: radial-gradient(circle, var(--dot) 1.1px, transparent 1.6px); background-size: 3.4vh 3.4vh; background-position: 1.7vh 1.7vh;
+  }
+  #surface.live { background-image: none; background-color: #000; }
+  #surface.stream .feed { display: block; border-radius: 25px; }
+  #surface .gear2 { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 3; opacity: 0.8; }
+  #fab { position: absolute; right: 14px; bottom: 14px; width: 66px; height: 66px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 3; }
+  #fab .i { width: 30px; height: 30px; }
+  #hint { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); width: max-content; max-width: 80%; text-align: center; pointer-events: none;
+    color: var(--muted); font-weight: 700; font-size: 0.95rem; line-height: 1.5; background: var(--panel); border-radius: 16px; padding: 8px 14px; }
+  #surface.live #hint { display: none; }
+  .ring { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; pointer-events: none; z-index: 2;
+    border: 2.5px solid var(--brown); background: color-mix(in oklab, var(--brown) 22%, transparent); }
+
+  /* Folha de teclas extras (aparece junto do teclado do celular) */
+  #keysheet { border-radius: 22px 22px 0 0; background: var(--bg); box-shadow: 0 -6px 18px var(--shade); padding: 6px 10px 8px; margin: 0 -2px -4px; }
+  #keysheet .grab { width: 54px; height: 5px; border-radius: 3px; background: var(--line); margin: 2px auto 8px; }
+  .krow { display: flex; gap: 7px; margin-bottom: 7px; }
+  .krow:last-child { margin-bottom: 0; }
+  .krow.scroll { overflow-x: auto; touch-action: pan-x; scrollbar-width: none; }
+  .krow.scroll::-webkit-scrollbar { display: none; }
+  .k { flex: 1 1 0; min-width: 0; height: 44px; padding: 0 2px; overflow: hidden; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; font-weight: 700; font-size: 0.82rem; white-space: nowrap; letter-spacing: -0.02em; }
+  .krow.scroll .k { flex: 0 0 56px; }
+  .k .i { width: 1.25em; height: 1.25em; }
+  .k.fn { flex-direction: column; gap: 0; line-height: 1.05; }
+  .k.fn small { font-size: 0.58rem; font-weight: 600; opacity: 0.85; letter-spacing: -0.04em; }
+  .k.wide { flex: 2 1 0; }
+  #kbInput { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; resize: none; pointer-events: none; user-select: text; -webkit-user-select: text; }
 </style>
 </head>
-
 <body>
 
 <section id="join">
-  <h1>RetroPad</h1>
-  <input id="pin" type="password" inputmode="numeric" placeholder="PIN (se houver)" autocomplete="off">
-  <div class="players">
-    <button id="p1">Jogador 1</button>
-    <button id="p2">Jogador 2</button>
-  </div>
-  <div id="status"></div>
-  <a class="admin" href="/admin">Gerenciar ROMs</a>
-  <button id="theme" class="themebtn" type="button">☀ / ☾ Tema</button>
-  <button class="themebtn hidden" data-install type="button">⬇ Instalar app</button>
+  <div class="logo"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg> RetroPad</div>
+  <input id="pin" type="password" inputmode="numeric" placeholder="PIN (se houver)" autocomplete="off" aria-label="PIN">
 
-  <!-- Seletor de MODO (Gamepad / Mouse / Teclado) -->
-  <div class="mode-selector" id="modeSelector">
-    <span>Modo: </span>
-    <select id="modeSelect">
-      <option value="gamepad">Gamepad (RetroPie)</option>
-      <option value="mouse">Mouse</option>
-      <option value="keyboard">Teclado</option>
-    </select>
+  <div class="seg" id="modeSeg" role="group" aria-label="Modo de controle">
+    <button type="button" data-mode="gamepad"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg> Gamepad</button>
+    <button type="button" data-mode="mouse"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#mouse-pointer-2"/></svg> Mouse</button>
+    <button type="button" data-mode="screen"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#monitor-play"/></svg> Tela</button>
   </div>
 
-  <!-- Seletor de sistema (apenas gamepad) -->
-  <div class="system-selector" id="systemSelector" style="display: none;">
-    <label for="systemSelect" style="display: block; margin-bottom: 6px; font-size: 0.9rem;;">Selecionar sistema</label>
-    <select id="systemSelect">
-      <option value="nes">NES</option>
-      <option value="snes">SNES / Genesis</option>
-      <option value="ps1">PS1</option>
-      <option value="n64">N64</option>
-      <option value="ps2">PS2 / Genérico</option>
-    </select>
+  <div class="players" id="players">
+    <button type="button" class="cta" id="p1">Jogador 1</button>
+    <button type="button" class="cta" id="p2">Jogador 2</button>
+  </div>
+  <button type="button" class="cta hidden" id="connect"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#log-in"/></svg> Conectar</button>
+  <div id="status" role="status"></div>
+
+  <div class="join-links">
+    <a href="/admin">Gerenciar ROMs</a>
+    <button id="theme" class="link-btn" type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#sun-moon"/></svg> Tema</button>
+    <button class="link-btn hidden" data-install type="button"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#download"/></svg> Instalar app</button>
   </div>
 </section>
 
-<div id="rotate">Gire o celular para o modo paisagem</div>
+<div id="rotate"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#gamepad-2"/></svg>Gire o celular para o modo paisagem</div>
+<div id="toast" class="hidden" role="status"></div>
+<div id="streamMsg" class="hidden" role="status"></div>
 
 <main id="pad" class="hidden">
-  <!-- =========================
-     LAYOUT GAMEPAD (padrão)
-     ========================= -->
-  <!-- D-pad -->
-  <div id="dpad">
-    <div class="btn up" data-btn="up">▲</div>
-    <div class="btn left" data-btn="left">◀</div>
-    <div class="btn right" data-btn="right">▶</div>
-    <div class="btn down" data-btn="down">▼</div>
-  </div>
 
-  <!-- ABXY (layout NES) -->
-  <div id="abxy">
-    <div class="btn x" data-btn="x">X</div>
-    <div class="btn y" data-btn="y">Y</div>
-    <div class="btn b" data-btn="b">B</div>
-    <div class="btn a" data-btn="a">A</div>
-  </div>
+  <!-- ================= GAMEPAD UNIVERSAL ================= -->
+  <canvas id="screenFull" class="feed"></canvas>
+  <div id="gamepad" class="screen">
+    <div class="sh l2 soft dark" data-btn="l2">L2</div>
+    <div class="sh l1 soft" data-btn="l">L1</div>
+    <div class="sh r2 soft dark" data-btn="r2">R2</div>
+    <div class="sh r1 soft" data-btn="r">R1</div>
+    <button type="button" class="gear soft dark" data-open-menu aria-label="Menu"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#settings"/></svg></button>
 
-  <!-- Botões extras para SNES/Genesis/PS1 -->
-  <div id="extra-buttons">
-    <div class="btn shoulder l" data-btn="l">L</div>
-    <div class="btn shoulder r" data-btn="r">R</div>
-    <div class="btn" data-btn="select">SELECT</div>
-    <div class="btn" data-btn="start">START</div>
-  </div>
-
-  <!-- Botões PS1/PS2/N64 extras -->
-  <div id="ps1-buttons" class="ps1-buttons hidden_ctrl">
-    <div class="btn" data-btn="l1">L1</div>
-    <div class="btn" data-btn="r1">R1</div>
-    <div class="btn" data-btn="l2">L2</div>
-    <div class="btn" data-btn="r2">R2</div>
-    <div class="btn" data-btn="l3">L3</div>
-    <div class="btn" data-btn="r3">R3</div>
-  </div>
-
-  <!-- Analógicos -->
-  <div id="analog-controls" class="hidden_ctrl">
-    <div style="position: absolute; left: 50%; bottom: 50%; transform: translateX(-50%);">
-      <canvas id="left-analog" width="80" height="80" style="border: 2px solid var(--border); border-radius: 50%; position: relative;"></canvas>
-      <canvas id="left-analog-point" width="20" height="20" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; background: var(--primary);"></canvas>
+    <div class="stick l" data-stick="l"><div class="knob"></div></div>
+    <div class="mini l3 soft dark" data-btn="l3">L3</div>
+    <div id="dpad" aria-label="Direcional">
+      <div class="arm v soft"></div><div class="arm h soft"></div><div class="cover"></div>
+      <svg class="i tri up" data-dir="up"><use href="/static/lucide.svg#triangle"/></svg>
+      <svg class="i tri down" data-dir="down"><use href="/static/lucide.svg#triangle"/></svg>
+      <svg class="i tri left" data-dir="left"><use href="/static/lucide.svg#triangle"/></svg>
+      <svg class="i tri right" data-dir="right"><use href="/static/lucide.svg#triangle"/></svg>
     </div>
-    <div style="position: absolute; right: 5%; bottom: 50%; transform: translateY(50%);">
-      <canvas id="right-analog" width="80" height="80" style="border: 2px solid var(--border); border-radius: 50%; position: relative;"></canvas>
-      <canvas id="right-analog-point" width="20" height="20" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; background: var(--primary);"></canvas>
+
+    <div class="pills">
+      <div class="pill soft" data-btn="select"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#menu"/></svg>SELECT</div>
+      <div class="pill soft" data-btn="start"><svg class="i fill" aria-hidden="true"><use href="/static/lucide.svg#play"/></svg>START</div>
     </div>
+
+    <div class="face">
+      <div class="btn y soft" data-btn="y">Y</div>
+      <div class="btn x soft" data-btn="x">X</div>
+      <div class="btn b soft" data-btn="b">B</div>
+      <div class="btn a soft" data-btn="a">A</div>
+    </div>
+    <div class="mini r3 soft dark" data-btn="r3">R3</div>
+    <div class="stick r" data-stick="r"><div class="knob"></div></div>
   </div>
 
-  <!-- Gatilhos L2/R2 -->
-  <div id="trigger-controls" class="hidden_ctrl">
-    <div class="btn shoulder l" data-btn="l2">L2</div>
-    <div class="btn shoulder r" data-btn="r2">R2</div>
-  </div>
-
-  <!-- Botão Hotkey/Menu -->
-  <div id="mode-btn" class="mode-btn hidden_ctrl">
-    <div class="btn" data-btn="mode">MODE</div>
+  <!-- ================= MOUSE + TECLADO ================= -->
+  <div id="touchpad" class="screen hidden">
+    <div id="surface">
+      <canvas id="screenSurf" class="feed"></canvas>
+      <div id="hint"><b>Arraste</b> para mover · toque para clicar<br>dois dedos: rolar ou clique direito</div>
+      <button type="button" class="gear2 soft" data-open-menu aria-label="Menu"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#settings"/></svg></button>
+      <button type="button" id="fab" class="soft dark" aria-label="Teclado do celular"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#keyboard"/></svg></button>
+    </div>
+    <div id="keysheet" class="hidden">
+      <div class="grab"></div>
+      <div class="krow scroll hidden" id="frow"></div>
+      <div class="krow" id="row1"></div>
+      <div class="krow" id="row2"></div>
+    </div>
+    <textarea id="kbInput" rows="1" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Entrada de texto"></textarea>
   </div>
 </main>
 
-<!-- =========================
-   SUPERPORPOS: Controles de Mouse (sempre visível quando modo mouse)
-   ========================= -->
-<div id="mouse-overlay" class="mode-mouse hidden" style="position: fixed; inset: 0; touch-action: pan-y pan-x; z-index: 5;">
-  <!-- Cursor de mouse que segue o dedo -->
-  <div class="mouse-cursor" id="mouseCursor"></div>
-  
-  <!-- Área para cliques -->
-  <div class="btn-mouse btn-left" data-btn="mouse_left">CLIQUE</div>
-  <div class="btn-mouse btn-right" data-btn="mouse_right">CLIQUE DIR</div>
-  <div class="btn-mouse btn-scroll" data-btn="scroll">ROLAGEM</div>
-  
-  <!-- Área de movimento - o utilizador arrasta aqui para mover o mouse -->
-  <div class="mouse-area" id="mouseArea" style="width: 100%; height: 100%;"></div>
-</div>
-
-<!-- =========================
-   SUPERPORPOS: Teclado (sempre visível quando modo keyboard)
-   ========================= -->
-<div id="keyboard-overlay" class="mode-keyboard hidden" style="position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); z-index: 5; padding: 10px;">
-  <div style="background: var(--card); border: 2px solid var(--border); border-radius: 8px; padding: 8px;">
-    <div class="keyboard-row" id="keyRow1">
-      <!-- Linha de teclas F1-F12 seria aqui, simplificamos -->
-    </div>
-    <div class="keyboard-row" id="keyRow2">
-      <kbd class="key" data-key="esc">ESC</kbd>
-      <kbd class="key" data-key="f1">F1</kbd>
-      <kbd class="key" data-key="f2">F2</kbd>
-      <kbd class="key" data-key="f3">F3</kbd>
-      <kbd class="key" data-key="f4">F4</kbd>
-      <kbd class="key" data-key="f5">F5</kbd>
-      <kbd class="key" data-key="f6">F6</kbd>
-      <kbd class="key" data-key="f7">F7</kbd>
-      <kbd class="key" data-key="f8">F8</kbd>
-      <kbd class="key" data-key="f9">F9</kbd>
-      <kbd class="key" data-key="f10">F10</kbd>
-      <kbd class="key" data-key="f11">F11</kbd>
-      <kbd class="key" data-key="f12">F12</kbd>
-    </div>
-    <div class="keyboard-row" id="keyRow3">
-      <kbd class="key" data-key="~">`</kbd>
-      <kbd class="key" data-key="1">1</kbd>
-      <kbd class="key" data-key="2">2</kbd>
-      <kbd class="key" data-key="3">3</kbd>
-      <kbd class="key" data-key="4">4</kbd>
-      <kbd class="key" data-key="5">5</kbd>
-      <kbd class="key" data-key="6">6</kbd>
-      <kbd class="key" data-key="7">7</kbd>
-      <kbd class="key" data-key="8">8</kbd>
-      <kbd class="key" data-key="9">9</kbd>
-      <kbd class="key" data-key="0">0</kbd>
-      <kbd class="key" data-key="-">-</kbd>
-      <kbd class="key" data_key="=">=</kbd>
-      <kbd class="key space" data-key="space">SPACO</kbd>
-    </div>
-    <div class="keyboard-row" id="keyRow4">
-      <kbd class="key" data-key="backspace">BACK</kbd>
-      <kbd class="key" data-key="tab">TAB</kbd>
-      <kbd class="key" data-key="q">Q</kbd>
-      <kbd class="key" data-key="w">W</kbd>
-      <kbd class="key" data-key="e">E</kbd>
-      <kbd class="key" data-key="r">R</kbd>
-      <kbd class="key" data-key="t">T</kbd>
-      <kbd class="key" data-key="y">Y</kbd>
-      <kbd class="key" data-key="u">U</kbd>
-      <kbd class="key" data-key="i">I</kbd>
-      <kbd class="key" data-key="o">O</kbd>
-      <kbd class="key" data-key="p">P</kbd>
-      <kbd class="key" data-key="[">[</kbd>
-      <kbd class="key" data-key="]">]</kbd>
-      <kbd class="key" data-key="enter">ENTR</kbd>
-    </div>
-    <div class="keyboard-row" id="keyRow5">
-      <kbd class="key" data-key="capslock">CAPS</kbd>
-      <kbd class="key" data-key="a">A</kbd>
-      <kbd class="key" data-key="s">S</kbd>
-      <kbd class="key" data-key="d">D</kbd>
-      <kbd class="key" data-key="f">F</kbd>
-      <kbd class="key" data-key="g">G</kbd>
-      <kbd class="key" data-key="h">H</kbd>
-      <kbd class="key" data-key="j">J</kbd>
-      <kbd class="key" data-key="k">K</kbd>
-      <kbd class="key" data-key="l">L</kbd>
-      <kbd class="key" data-key=";">;</kbd>
-      <kbd class="key" data-key="'">'</kbd>
-      <kbd class="key" data-key="shift">SHIFT</kbd>
-    </div>
-    <div class="keyboard-row" id="keyRow6">
-      <kbd class="key" data-key="left">←</kbd>
-      <kbd class="key" data-key="control">CTRL</kbd>
-      <kbd class="key" data-key="z">Z</kbd>
-      <kbd class="key" data-key="x">X</kbd>
-      <kbd class="key" data-key="c">C</kbd>
-      <kbd class="key" data-key="v">V</kbd>
-      <kbd class="key" data-key="b">B</kbd>
-      <kbd class="key" data-key="n">N</kbd>
-      <kbd class="key" data-key="m">M</kbd>
-      <kbd class="key" data-key="<",",</kbd>
-      <kbd class="key" data-key=">">.</kbd>
-      <kbd class="key" data-key="right">→</kbd>
-      <kbd class="key" data-key="alt">ALT</kbd>
-    </div>
-  </div>
+<div id="sheetBack" class="hidden"></div>
+<div id="menu" class="hidden" role="menu">
+  <button type="button" id="mScreen"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#monitor-play"/></svg>Tela do sistema<span class="state" id="mScreenState">desligada</span></button>
+  <button type="button" id="mTheme"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#sun-moon"/></svg>Alternar tema</button>
+  <hr>
+  <button type="button" id="mExit" class="danger"><svg class="i" aria-hidden="true"><use href="/static/lucide.svg#log-out"/></svg>Sair</button>
 </div>
 
 <script>
-(function() {
-  const joinEl = document.getElementById('join');
-  const padEl = document.getElementById('pad');
-  const statusEl = document.getElementById('status');
-  const pinEl = document.getElementById('pin');
-
-  let ws = null;
-  let player = null;
-  let retry = false;
-  let inGame = false;
-  let lastSent = '';
-  let currentSystem = 'nes';
-  let currentMode = 'gamepad'; // gamepad | mouse | keyboard
-
-  // Estado atual: toques ativos e o que está pressionado
-  const padButtons = [...document.querySelectorAll('[data-btn]')];
-
-  function setStatus(text) { statusEl.textContent = text; }
-
-  // Selecionar modo de controle
-  function setMode(mode) {
-    currentMode = mode;
-    // Atualizar seletor visual
-    document.getElementById('modeSelect').value = mode;
-    
-    // Mostrar/ocultar overlays respectivos
-    document.getElementById('mouse-overlay').classList.toggle('hidden', mode !== 'mouse');
-    document.getElementById('keyboard-overlay').classList.toggle('hidden', mode !== 'keyboard');
-    document.querySelector('#pad').classList.toggle('mode-mouse', mode === 'mouse');
-    document.querySelector('#pad').classList.toggle('mode-keyboard', mode === 'keyboard');
-    document.querySelector('#pad').classList.toggle('mode-gamepad', mode === 'gamepad');
-    
-    // Mostrar/ocultar seletor de sistema (apenas gamepad)
-    const sysSelector = document.getElementById('systemSelector');
-    if (mode === 'gamepad') {
-      sysSelector.style.display = 'block';
-    } else {
-      sysSelector.style.display = 'none';
-    }
-  }
-
-  // Inicializa com modo gamepad
-  setMode('gamepad');
-
-  function connect() {
-    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(`${proto}://${location.host}/ws`);
-
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ t: 'join', player, pin: pinEl.value.trim(), mode: currentMode }));
-    };
-
-    ws.onmessage = (ev) => {
-      const m = JSON.parse(ev.data);
-      if (m.t === 'joined') {
-        enterGame();
-      } else if (m.t === 'error') {
-        retry = false;
-        setStatus(m.msg);
-      }
-    };
-
-    ws.onclose = () => {
-      if (inGame && retry) {
-        setStatus('Reconectando...');
-        setTimeout(connect, 1500);
-      } else if (!inGame) {
-        setStatus(retry ? 'Não foi possível conectar' : statusEl.textContent);
-        retry = false;
-      }
-    };
-  }
-
-  function startJoin(p) {
-    player = p;
-    retry = true;
-    setStatus('Conectando...');
-    try { document.documentElement.requestFullscreen?.(); } catch (_) {}
-    connect();
-  }
-
-  function enterGame() {
-    inGame = true;
-    setStatus('');
-    joinEl.classList.add('hidden');
-    padEl.classList.remove('hidden');
-    document.body.classList.add('game');
-  }
-
-  // Envia estado baseado no modo atual
-  function sendState(payload) {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    if (payload !== lastSent) {
-      ws.send(JSON.stringify(payload));
-      lastSent = payload;
-    }
-  }
-
-  function sendGamepad(buttons, hat) {
-    sendState({ t: 'state', buttons, hat });
-  }
-
-  function sendMouse(dx, dy, buttons) {
-    // Envia movimento relativo e estado dos botões
-    sendState({ t: 'state', buttons, hat: [0, 0], mouse_rel: [dx, dy] });
-  }
-
-  function sendKeyboard(keys) {
-    // Envia lista de nomes de teclas pressionadas
-    sendState({ t: 'state', buttons: keys, hat: [0, 0], keys: keys });
-  }
-
-  // Lê todos os toques ativos e converte em botões + direção
-  function readTouches(e) {
-    const buttons = new Set();
-    let hx = 0, hy = 0;
-    let mouseX = 0, mouseY = 0; // para modo mouse
-
-    for (const t of e.touches) {
-      const el = document.elementFromPoint(t.clientX, t.clientY);
-      const target = el && el.closest('[data-btn]');
-      if (!target) {
-        // Se não bateu em botão específico, trata como entrada de modo
-        if (currentMode === 'mouse') {
-          // Movimento do mouse baseado na posição do toque
-          mouseX = (t.clientX / window.innerWidth) * 200 - 100; // -100 a 100
-          mouseY = (t.clientY / window.innerHeight) * 200 - 100;
-        }
-        continue;
-      }
-      const name = target.dataset.btn;
-      if (name === 'left') hx -= 1;
-      else if (name === 'right') hx += 1;
-      else if (name === 'up') hy -= 1;
-      else if (name === 'down') hy += 1;
-      else buttons.add(name);
-    }
-
-    hx = Math.max(-1, Math.min(1, hx));
-    hy = Math.max(-1, Math.min(1, hy));
-
-    // No modo mouse, enviar movimento mesmo sem botão específico
-    if (currentMode === 'mouse') {
-      // Enviar movimento acumulado - mas só enviar se houver movimento significativo
-      if (Math.abs(mouseX) > 5 || Math.abs(mouseY) > 5) {
-        sendMouse(mouseX, mouseY, []);
-      }
-    }
-
-    // Destaque visual
-    for (const b of padButtons) {
-      const name = b.dataset.btn;
-      const on = ['up', 'down', 'left', 'right'].includes(name)
-        ? (name === 'left' && hx < 0) || (name === 'right' && hx > 0) ||
-          (name === 'up' && hy < 0) || (name === 'down' && hy > 0)
-        : buttons.has(name);
-      b.classList.toggle('on', on);
-    }
-
-    // Enviar baseado no modo atual
-    if (currentMode === 'gamepad') {
-      sendGamepad([...buttons], [hx, hy]);
-    } else if (currentMode === 'mouse') {
-      // Mouse já tem movimento enviado acima no readTouches
-      // Aqui só enviamos estado dos botões se houver mudança
-      if (buttons.size > 0) {
-        sendMouse(0, 0, [...buttons]);
-      }
-    } else if (currentMode === 'keyboard') {
-      // Para keyboard, os botões mapeados são teclas
-      if (buttons.size > 0) {
-        sendKeyboard([...buttons]);
-      }
-    }
-  }
-
-  const touchHandler = (e) => { e.preventDefault(); readTouches(e); };
-  for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
-    document.getElementById('pad').addEventListener(type, touchHandler, { passive: false });
-  }
-
-  // ---- Controles de Mouse no overlay ----
-  
-  // Mover cursor do mouse ao arrastar na área
-  const mouseArea = document.getElementById('mouseArea');
-  const mouseCursor = document.getElementById('mouseCursor');
-  
-  let isMouseDragging = false;
-  let lastMouseX = 0, lastMouseY = 0;
-  
-  mouseArea.addEventListener('mousedown', (e) => {
-    isMouseDragging = true;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
-    mouseCursor.style.left = `${e.clientX}px`;
-    mouseCursor.style.top = `${e.clientY}px`;
-  });
-  
-  mouseArea.addEventListener('mousemove', (e) => {
-    if (!isMouseDragging) return;
-    const dx = e.clientX - lastMouseX;
-    const dy = e.clientY - lastMouseY;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
-    
-    // Mover cursor visual
-    mouseCursor.style.left = `${e.clientX}px`;
-    mouseCursor.style.top = `${e.clientY}px`;
-    
-    // Enviar ao servidor (limitado para não encher de mensagens)
-    // Aqui enviamos a cada alguns eventos ou podemos usar requestAnimationFrame
-    // Para simplificar, enviamos a cada movement com throttle natural do touch
-    // No mobile usamos touch events em vez de mouse, mas o princípio é o mesmo
-  });
-  
-  mouseArea.addEventListener('mouseup', () => {
-    isMouseDragging = false;
-  });
-  
-  // No mobile, usar touchmove para mover mouse
-  mouseArea.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    // Enviar movimento relativo ao servidor
-    // O servidor acumula e envia quando apply_state é chamado
-    // Aqui apenas marcamos que houve movimento
-    // O envio real acontece em readTouches quando detecta toque fora de botão
-  }, { passive: false });
-  
-  // Cliques nos botões de mouse no overlay
-  document.querySelectorAll('.mode-mouse .btn-mouse').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const btnName = btn.dataset.btn;
-      if (currentMode === 'mouse') {
-        // Mapear clique para botão do mouse
-        let evKey;
-        if (btnName === 'mouse_left') evKey = e.BTN_LEFT;
-        else if (btnName === 'mouse_right') evKey = e.BTN_RIGHT;
-        
-        // Toggle: pressionar/soltar
-        // Enviamos como estado de botão
-        sendState({ t: 'state', buttons: [btnName], hat: [0, 0] });
-      }
-    });
-  });
-
-  // ---- Controles de Teclado no overlay ----
-  
-  // Quando teclas do overlay são clicadas
-  document.querySelectorAll('.mode-keyboard .key').forEach(key => {
-    key.addEventListener('click', () => {
-      const keyName = key.dataset.key;
-      if (currentMode === 'keyboard') {
-        // Enviar tecla pressionada
-        // Usar o nome que já está no data-key, que corresponde aos nossos BUTTONS
-        sendState({ t: 'state', buttons: [keyName], hat: [0, 0], keys: [keyName] });
-      }
-    });
-  });
-
-  // ---- Seletor de modo ----
-  
-  document.getElementById('modeSelect').onchange = (e) => {
-    setMode(e.target.value);
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const joinEl = $('join'), padEl = $('pad'), statusEl = $('status'), pinEl = $('pin');
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} },
   };
+  const ico = (name, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="/static/lucide.svg#${name}"/></svg>`;
 
-  // ---- Seletor de sistema (apenas gamepad) ----
-  
-  document.getElementById('systemSelect').onchange = (e) => {
-    // Aplicar layout do sistema - simplificado: só esconder/mostrar controles
-    // O modo keyboard/mouse ignoram isso
-    if (currentMode === 'gamepad') {
-      currentSystem = e.target.value;
-      // Aqui poderia chamar a função applySystemLayout, mas já temos o sistema no state do servidor
-      // Para agora, apenas confirmar a seleção
-      setStatus(`Sistema: ${e.target.value}`);
-    }
-  };
+  const MODES = ['gamepad', 'mouse', 'screen'];
+  let mode = store.get('rp_mode'); if (mode === 'keyboard') mode = 'mouse';
+  if (!MODES.includes(mode)) mode = 'gamepad';
+  let ws = null, player = null, retry = false, inGame = false;
 
-  // ---- Inicialização ----
-
-  function connect() {
-    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(`${proto}://${location.host}/ws`);
-
-    ws.onopen = () => {
-      // Enviar modo atual ao conectar
-      ws.send(JSON.stringify({ t: 'join', player, pin: pinEl.value.trim(), mode: currentMode }));
-    };
-
-    ws.onmessage = (ev) => {
-      const m = JSON.parse(ev.data);
-      if (m.t === 'joined') {
-        enterGame();
-      } else if (m.t === 'error') {
-        retry = false;
-        setStatus(m.msg);
-      }
-    };
-
-    ws.onclose = () => {
-      if (inGame && retry) {
-        setStatus('Reconectando...');
-        setTimeout(connect, 1500);
-      } else if (!inGame) {
-        setStatus(retry ? 'Não foi possível conectar' : statusEl.textContent);
-        retry = false;
-      }
-    };
+  const setStatus = (text) => { statusEl.textContent = text; };
+  let toastTimer = 0;
+  function toast(text, ms = 1800) {
+    const el = $('toast'); el.textContent = text; el.classList.remove('hidden');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), ms);
   }
+  const buzz = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (_) {} };
 
-  function startJoin(p) {
-    player = p;
-    retry = true;
-    setStatus('Conectando...');
-    try { document.documentElement.requestFullscreen?.(); } catch (_) {}
-    connect();
-  }
-
-  function enterGame() {
-    inGame = true;
-    setStatus('');
-    joinEl.classList.add('hidden');
-    padEl.classList.remove('hidden');
-    document.body.classList.add('game');
-  }
-
-  // Função send simplificada
-  function send(buttons, hat, mouse_rel, keys) {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    // Construir payload baseado no modo
-    const payload = { t: 'state' };
-    if (currentMode === 'gamepad') {
-      payload.buttons = buttons;
-      payload.hat = hat;
-    } else if (currentMode === 'mouse') {
-      payload.buttons = buttons || [];
-      payload.hat = [0, 0];
-      if (mouse_rel) payload.mouse_rel = mouse_rel;
-    } else if (currentMode === 'keyboard') {
-      payload.buttons = buttons || [];
-      payload.hat = [0, 0];
-      if (keys) payload.keys = keys;
-    }
-    if (payload !== lastSent) {
-      ws.send(JSON.stringify(payload));
-      lastSent = JSON.stringify(payload);
-    }
-  }
-
-  // Lê todos os toques ativos e converte em botões + direção
-  function readTouches(e) {
-    const buttons = new Set();
-    let hx = 0, hy = 0;
-
-    for (const t of e.touches) {
-      const el = document.elementFromPoint(t.clientX, t.clientY);
-      const target = el && el.closest('[data-btn]');
-      if (!target) continue;
-      const name = targetDatasetBtn;
-      if (name === 'left') hx -= 1;
-      else if (name === 'right') hx += 1;
-      else if (name === 'up') hy -= 1;
-      else if (name === 'down') hy += 1;
-      else buttons.add(name);
-    }
-
-    hx = Math.max(-1, Math.min(1, hx));
-    hy = Math.max(-1, Math.min(1, hy));
-
-    // Destaque visual
-    for (const b of padButtons) {
-      const name = b.dataset.btn;
-      const on = ['up', 'down', 'left', 'right'].includes(name)
-        ? (name === 'left' && hx < 0) || (name === 'right' && hx > 0) ||
-          (name === 'up' && hy < 0) || (name === 'down' && hy > 0)
-        : buttons.has(name);
-      b.classList.toggle('on', on);
-    }
-
-    // Enviar baseado no modo
-    if (currentMode === 'gamepad') {
-      send([...buttons], [hx, hy]);
-    } else if (currentMode === 'mouse') {
-      // No modo mouse, ler posição do cursor do overlay touch
-      // Simplificado: enviar movimento baseado em onde tocou
-      send([...buttons], [hx, hy]); // buttons podem ter nomes de mouse
-    } else if (currentMode === 'keyboard') {
-      send([...buttons], [0, 0], [], [...buttons]); // keys extra
-    }
-  }
-
-  const touchHandler = (e) => { e.preventDefault(); readTouches(e); };
-  for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
-    document.getElementById('pad').addEventListener(type, touchHandler, { passive: false });
-  }
-
-  // Solta tudo se o app for para o segundo plano
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      // Enviar estado vazio baseado no modo
-      if (currentMode === 'gamepad') send([], [0, 0]);
-      else if (currentMode === 'mouse') send([], [0, 0], [0, 0]);
-      else if (currentMode === 'keyboard') send([], [0, 0], [], []);
-    }
-  });
-
-  document.getElementById('theme').onclick = () => {
+  // ---------- Tema ----------
+  function toggleTheme() {
     const root = document.documentElement;
     const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
     root.dataset.theme = dark ? 'light' : 'dark';
-    try { localStorage.setItem('rp_theme', root.dataset.theme); } catch (_) {}
-  };
+    store.set('rp_theme', root.dataset.theme);
+  }
+  $('theme').onclick = toggleTheme;
 
-  document.getElementById('p1').onclick = () => startJoin(1);
-  document.getElementById('p2').onclick = () => startJoin(2);
+  // ---------- Tela de entrada ----------
+  function paintJoin() {
+    document.querySelectorAll('#modeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
+    const gp = mode === 'gamepad';
+    $('players').classList.toggle('hidden', !gp);
+    $('connect').classList.toggle('hidden', gp);
+  }
+  document.querySelectorAll('#modeSeg button').forEach((b) => b.addEventListener('click', () => {
+    mode = b.dataset.mode; store.set('rp_mode', mode); paintJoin();
+  }));
 
-  // Seletor de sistema
-  document.getElementById('systemSelect').onchange = (e) => {
-    if (currentMode === 'gamepad') {
-      currentSystem = e.target.value;
+  // ---------- Conexão ----------
+  function connect() {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    const sock = new WebSocket(`${proto}://${location.host}/ws`);
+    ws = sock;
+    ws.onopen = () => {
+      const join = { t: 'join', pin: pinEl.value.trim(), mode: mode === 'gamepad' ? 'gamepad' : 'touchpad' };
+      if (mode === 'gamepad') join.player = player;
+      ws.send(JSON.stringify(join));
+    };
+    ws.onmessage = (ev) => {
+      if (sock !== ws) return;
+      if (typeof ev.data !== 'string') { onFrame(ev.data); return; }
+      const m = JSON.parse(ev.data);
+      if (m.t === 'joined') { if (!inGame) enterGame(); else { toast('Reconectado'); if (streaming) wsSend({ t: 'stream', on: true }); } }
+      else if (m.t === 'stream') onStreamMsg(m);
+      else if (m.t === 'error') { retry = false; setStatus(m.msg); if (inGame) leaveGame(); }
+    };
+    ws.onclose = () => {
+      if (sock !== ws) return;   // socket antigo (já substituído): ignora
+      if (inGame && retry) { toast('Reconectando…', 3000); setTimeout(connect, 1500); }
+      else if (!inGame && retry) { retry = false; setStatus('Não foi possível conectar'); }
+    };
+  }
+  function startJoin(p) {
+    player = p; retry = true; setStatus('Conectando…');
+    try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); } catch (_) {}
+    connect();
+  }
+  $('p1').onclick = () => startJoin(1);
+  $('p2').onclick = () => startJoin(2);
+  $('connect').onclick = () => startJoin(null);
+  const wsSend = (obj) => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj)); };
+
+  function enterGame() {
+    inGame = true; setStatus('');
+    joinEl.classList.add('hidden'); padEl.classList.remove('hidden');
+    document.body.classList.add('game');
+    const gp = mode === 'gamepad';
+    document.body.classList.toggle('m-gamepad', gp);
+    $('gamepad').classList.toggle('hidden', !gp);
+    $('touchpad').classList.toggle('hidden', gp);
+    fit();
+    if (mode === 'screen' || store.get('rp_stream') === '1') startStream();
+  }
+  function leaveGame() {
+    retry = false; inGame = false;
+    pressed.clear(); lastPad = '';
+    if (streaming) wsSend({ t: 'stream', on: false });   // para o vídeo antes de fechar o socket
+    streaming = false; gotFrame = false; paintStream(); hideMsg(); closeMenu();
+    const old = ws; ws = null;
+    try { if (old) old.close(); } catch (_) {}
+    kb.blur();
+    padEl.classList.add('hidden'); joinEl.classList.remove('hidden');
+    document.body.classList.remove('game');
+  }
+
+  // O teclado do celular encolhe a tela: acompanhamos a área realmente visível.
+  function fit() {
+    const vv = window.visualViewport;
+    padEl.style.height = vv ? vv.height + 'px' : '';
+    padEl.style.transform = vv && vv.offsetTop ? `translateY(${vv.offsetTop}px)` : '';
+  }
+  if (window.visualViewport) { visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); }
+
+  // ---------- Menu (engrenagem) ----------
+  const openMenu = () => { $('sheetBack').classList.remove('hidden'); $('menu').classList.remove('hidden'); paintStream(); };
+  function closeMenu() { $('sheetBack').classList.add('hidden'); $('menu').classList.add('hidden'); }
+  document.querySelectorAll('[data-open-menu]').forEach((b) => b.addEventListener('click', openMenu));
+  $('sheetBack').addEventListener('click', closeMenu);
+  $('mTheme').addEventListener('click', () => { toggleTheme(); closeMenu(); });
+  $('mScreen').addEventListener('click', () => { closeMenu(); toggleStream(); });
+  $('mExit').addEventListener('click', () => { closeMenu(); leaveGame(); });
+
+  // ---------- Gamepad ----------
+  const pressed = new Set();
+  const axes = { x: 0, y: 0, rx: 0, ry: 0 };
+  let hat = [0, 0], lastPad = '';
+  function sendPad() {
+    const payload = JSON.stringify({ t: 'state', buttons: [...pressed], hat, axes });
+    if (payload === lastPad) return;
+    lastPad = payload;
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(payload);
+  }
+  function holdable(el, onDown, onUp) {
+    const ids = new Set();
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (_) {}
+      ids.add(e.pointerId); el.classList.add('on'); buzz(); onDown();
+    });
+    const up = (e) => { ids.delete(e.pointerId); if (!ids.size) { el.classList.remove('on'); onUp(); } };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  }
+  document.querySelectorAll('#gamepad [data-btn]').forEach((el) => {
+    const name = el.dataset.btn;
+    holdable(el, () => { pressed.add(name); sendPad(); }, () => { pressed.delete(name); sendPad(); });
+  });
+  // D-pad: uma peça só, a direção vem de onde o dedo está (aceita diagonal e deslizar)
+  const dpad = $('dpad'), tris = [...dpad.querySelectorAll('[data-dir]')];
+  function dpadAt(e) {
+    const r = dpad.getBoundingClientRect(), t = 0.17;
+    const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+    hat = [x < -t ? -1 : x > t ? 1 : 0, y < -t ? -1 : y > t ? 1 : 0];
+    for (const d of tris) {
+      const k = d.dataset.dir;
+      d.classList.toggle('on', (k === 'left' && hat[0] < 0) || (k === 'right' && hat[0] > 0) || (k === 'up' && hat[1] < 0) || (k === 'down' && hat[1] > 0));
     }
+    sendPad();
+  }
+  let dpadId = null;
+  dpad.addEventListener('pointerdown', (e) => { e.preventDefault(); dpadId = e.pointerId; dpad.setPointerCapture(e.pointerId); buzz(); dpadAt(e); });
+  dpad.addEventListener('pointermove', (e) => { if (e.pointerId === dpadId) dpadAt(e); });
+  const dpadUp = (e) => {
+    if (e.pointerId !== dpadId) return;
+    dpadId = null; hat = [0, 0]; tris.forEach((d) => d.classList.remove('on')); sendPad();
   };
+  dpad.addEventListener('pointerup', dpadUp); dpad.addEventListener('pointercancel', dpadUp);
+  // Analógicos
+  document.querySelectorAll('.stick').forEach((el) => {
+    const names = el.dataset.stick === 'r' ? ['rx', 'ry'] : ['x', 'y'];
+    let id = null;
+    const move = (e) => {
+      const r = el.getBoundingClientRect(), R = r.width / 2;
+      let dx = (e.clientX - r.left - R) / R, dy = (e.clientY - r.top - R) / R;
+      const len = Math.hypot(dx, dy);
+      if (len > 1) { dx /= len; dy /= len; }
+      el.style.setProperty('--kx', `${dx * R * 0.4}px`); el.style.setProperty('--ky', `${dy * R * 0.4}px`);
+      axes[names[0]] = +dx.toFixed(2); axes[names[1]] = +dy.toFixed(2); sendPad();
+    };
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); id = e.pointerId; el.setPointerCapture(id); move(e); });
+    el.addEventListener('pointermove', (e) => { if (e.pointerId === id) move(e); });
+    const end = (e) => {
+      if (e.pointerId !== id) return;
+      id = null; el.style.removeProperty('--kx'); el.style.removeProperty('--ky');
+      axes[names[0]] = 0; axes[names[1]] = 0; sendPad();
+    };
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  });
+  // Solta tudo se o app for para o segundo plano
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden || mode !== 'gamepad') return;
+    pressed.clear(); hat = [0, 0]; Object.keys(axes).forEach((k) => { axes[k] = 0; }); sendPad();
+  });
+
+  // ---------- Tela do sistema (streaming) ----------
+  // O servidor manda um JPEG por mensagem binária; desenhamos o mais recente (quadros atrasados são descartados).
+  const surfaceEl = $('surface'), cvFull = $('screenFull'), cvSurf = $('screenSurf'), msgEl = $('streamMsg');
+  let streaming = false, gotFrame = false, decoding = false, pending = null;
+  function showMsg(text, error) {
+    msgEl.className = error ? 'err' : '';
+    msgEl.innerHTML = `${ico(error ? 'monitor-off' : 'loader-circle', error ? '' : 'spin')}<span></span>`;
+    msgEl.lastChild.textContent = text;
+    if (error) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Tentar de novo';
+      b.onclick = () => startStream(); msgEl.append(b);
+    }
+  }
+  const hideMsg = () => msgEl.classList.add('hidden');
+  function paintStream() {
+    const live = streaming && gotFrame;
+    document.body.classList.toggle('stream', streaming);
+    document.body.classList.toggle('live', live);
+    surfaceEl.classList.toggle('stream', streaming);
+    surfaceEl.classList.toggle('live', live);
+    $('mScreen').classList.toggle('on', streaming);
+    $('mScreenState').textContent = streaming ? 'ligada' : 'desligada';
+    $('mScreen').firstElementChild.outerHTML = ico(streaming ? 'monitor-off' : 'monitor-play');
+  }
+  function startStream() {
+    if (!inGame) return;
+    streaming = true; gotFrame = false; store.set('rp_stream', '1');
+    showMsg('Carregando a tela do sistema…'); msgEl.classList.remove('hidden');
+    paintStream(); wsSend({ t: 'stream', on: true });
+  }
+  function stopStream() {
+    streaming = false; gotFrame = false; store.set('rp_stream', '0');
+    wsSend({ t: 'stream', on: false }); hideMsg(); paintStream();
+  }
+  const toggleStream = () => (streaming ? stopStream() : startStream());
+  function onStreamMsg(m) {
+    if (m.state === 'error') { streaming = false; gotFrame = false; paintStream(); showMsg(m.msg || 'Falha na transmissão', true); msgEl.classList.remove('hidden'); }
+  }
+  function onFrame(blob) {
+    if (!streaming) return;
+    if (decoding) { pending = blob; return; }
+    decoding = true;
+    createImageBitmap(blob).then((bmp) => {
+      const cv = mode === 'gamepad' ? cvFull : cvSurf;
+      if (cv.width !== bmp.width || cv.height !== bmp.height) { cv.width = bmp.width; cv.height = bmp.height; }
+      cv.getContext('2d').drawImage(bmp, 0, 0);
+      if (bmp.close) bmp.close();
+      if (!gotFrame) { gotFrame = true; hideMsg(); paintStream(); }
+    }).catch(() => {}).finally(() => {
+      decoding = false;
+      if (pending) { const next = pending; pending = null; onFrame(next); }
+    });
+  }
+  // Fechou a aba ou saiu do app: avisa o servidor para parar o vídeo antes da conexão cair.
+  window.addEventListener('pagehide', () => { if (streaming) wsSend({ t: 'stream', on: false }); });
+
+  // ---------- Touchpad ----------
+  const surface = surfaceEl;
+  const SENS = 1.7;                       // velocidade do cursor
+  const TAP_MS = 230, TAP_PX = 9, DRAG_GAP_MS = 320;
+  let mx = 0, my = 0, sv = 0, raf = 0;    // acumuladores enviados a cada quadro
+  const touches = new Map();              // id -> {x, y, sx, sy, t, moved}
+  let lastTap = 0, dragging = false, twoMoved = false, twoStart = 0;
+
+  function flush() {
+    raf = 0;
+    const dx = Math.round(mx), dy = Math.round(my), v = Math.trunc(sv);
+    if (dx || dy) { wsSend({ t: 'move', dx, dy }); mx -= dx; my -= dy; }
+    if (v) { wsSend({ t: 'scroll', v }); sv -= v; }
+  }
+  const queue = () => { if (!raf) raf = requestAnimationFrame(flush); };
+  const click = (b, down) => wsSend({ t: 'click', b, down });
+  const tapClick = (b) => { click(b, true); click(b, false); };
+
+  const rings = new Map();
+  function ring(id, x, y) {
+    let el = rings.get(id);
+    if (!el) { el = document.createElement('div'); el.className = 'ring'; surface.appendChild(el); rings.set(id, el); }
+    const r = surface.getBoundingClientRect();
+    el.style.left = (x - r.left) + 'px'; el.style.top = (y - r.top) + 'px';
+  }
+  function unring(id) { const el = rings.get(id); if (el) { el.remove(); rings.delete(id); } }
+
+  surface.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button')) return;      // engrenagem e botão de teclado têm o próprio toque
+    e.preventDefault(); surface.setPointerCapture(e.pointerId);
+    const now = performance.now();
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: now, moved: false });
+    ring(e.pointerId, e.clientX, e.clientY);
+    if (touches.size === 1) {
+      // toque, e logo em seguida encostar e arrastar = segurar o botão (arrastar janelas, selecionar texto)
+      if (now - lastTap < DRAG_GAP_MS) { dragging = true; click('left', true); }
+    } else if (touches.size === 2) { twoMoved = false; twoStart = now; }
+  });
+  surface.addEventListener('pointermove', (e) => {
+    const p = touches.get(e.pointerId); if (!p) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y;
+    p.x = e.clientX; p.y = e.clientY;
+    if (Math.hypot(p.x - p.sx, p.y - p.sy) > TAP_PX) p.moved = true;
+    ring(e.pointerId, e.clientX, e.clientY);
+    if (touches.size === 1) {
+      if (!p.moved) return;                    // ignora tremida do dedo parado
+      mx += dx * SENS; my += dy * SENS; queue();
+    } else if (touches.size === 2) {
+      if (p.moved) twoMoved = true;
+      sv += dy / 14 / 2; queue();              // média dos dois dedos; o conteúdo acompanha os dedos
+    }
+  });
+  function surfaceEnd(e) {
+    const p = touches.get(e.pointerId); if (!p) return;
+    const now = performance.now(), n = touches.size;
+    touches.delete(e.pointerId); unring(e.pointerId);
+    if (n === 1) {
+      if (dragging) { dragging = false; click('left', false); lastTap = 0; }
+      else if (e.type === 'pointerup' && !p.moved && now - p.t < TAP_MS) { tapClick('left'); lastTap = now; }
+    } else if (n === 2 && e.type === 'pointerup' && !twoMoved && now - twoStart < TAP_MS + 100) {
+      tapClick('right');                       // toque com dois dedos = clique direito
+    }
+  }
+  surface.addEventListener('pointerup', surfaceEnd); surface.addEventListener('pointercancel', surfaceEnd);
+
+  // ---------- Teclado do celular + teclas extras ----------
+  const kb = $('kbInput'), sheet = $('keysheet');
+  const mods = new Set();                  // modificadores "armados" para a próxima tecla
+  const takeMods = () => {
+    const m = [...mods]; mods.clear();
+    document.querySelectorAll('#keysheet [data-mod]').forEach((b) => b.classList.remove('on'));
+    return m;
+  };
+  const WIN = '<svg class="i fill" viewBox="0 0 24 24" aria-hidden="true" style="stroke:none"><path d="M3 5.5l7.5-1v7H3zM11.5 4.3L21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg>';
+  const ROW1 = [['key', 'esc', 'Esc'], ['key', 'tab', 'Tab'], ['key', 'home', 'Home'], ['key', 'end', 'End'],
+    ['key', 'pageup', 'PgUp'], ['key', 'pagedown', 'PgDn'], ['key', 'insert', 'Ins'], ['fn']];
+  const ROW2 = [['mod', 'meta', WIN], ['mod', 'ctrl', 'Ctrl'], ['mod', 'alt', 'Alt'], ['mod', 'shift', ico('arrow-big-up') + 'Shift', 'wide'],
+    ['key', 'left', ico('arrow-left')], ['key', 'down', ico('arrow-down')], ['key', 'up', ico('arrow-up')], ['key', 'right', ico('arrow-right')]];
+  function addKey(parent, [kind, name, label, extra]) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    // preventDefault no pointerdown impede o botão de roubar o foco, então o teclado do celular não fecha
+    b.addEventListener('pointerdown', (e) => e.preventDefault());
+    if (kind === 'fn') {
+      b.className = 'k fn soft dark'; b.innerHTML = 'Fn<small>F1–F12</small>';
+      b.addEventListener('click', () => { buzz(); $('frow').classList.toggle('hidden'); b.classList.toggle('on', !$('frow').classList.contains('hidden')); });
+    } else {
+      b.className = 'k soft' + (extra ? ' ' + extra : ''); b.innerHTML = label;
+      if (kind === 'mod') {
+        b.dataset.mod = name;
+        b.addEventListener('click', () => { buzz(); mods.has(name) ? mods.delete(name) : mods.add(name); b.classList.toggle('on', mods.has(name)); });
+      } else b.addEventListener('click', () => { buzz(); wsSend({ t: 'key', key: name, mods: takeMods() }); });
+    }
+    parent.appendChild(b);
+  }
+  ROW1.forEach((k) => addKey($('row1'), k));
+  ROW2.forEach((k) => addKey($('row2'), k));
+  for (let n = 1; n <= 12; n++) addKey($('frow'), ['key', 'f' + n, 'F' + n]);
+
+  const FAB_ICON = (open) => ico(open ? 'x' : 'keyboard');
+  $('fab').addEventListener('click', () => { if (document.activeElement === kb) kb.blur(); else { resetKb(); kb.focus(); } });
+  let blurTimer = 0;
+  kb.addEventListener('focus', () => {
+    clearTimeout(blurTimer); sheet.classList.remove('hidden'); $('fab').innerHTML = FAB_ICON(true); $('hint').classList.add('hidden');
+  });
+  kb.addEventListener('blur', () => {
+    blurTimer = setTimeout(() => { sheet.classList.add('hidden'); $('fab').innerHTML = FAB_ICON(false); $('hint').classList.remove('hidden'); }, 120);
+  });
+
+  // O que o usuário digita vira texto no PC. O campo guarda alguns caracteres invisíveis
+  // para que o Backspace tenha o que apagar e a gente consiga enviá-lo ao PC.
+  const SENTINEL = '​'.repeat(8);
+  let last = SENTINEL, composing = false;
+  function resetKb() { kb.value = SENTINEL; last = SENTINEL; try { kb.setSelectionRange(SENTINEL.length, SENTINEL.length); } catch (_) {} }
+  kb.addEventListener('compositionstart', () => { composing = true; });
+  kb.addEventListener('compositionend', () => { composing = false; setTimeout(resetKb, 0); });
+  kb.addEventListener('input', () => {
+    const v = kb.value;
+    let p = 0; const m = Math.min(v.length, last.length);
+    while (p < m && v[p] === last[p]) p++;            // trecho que não mudou
+    const back = last.length - p;                      // caracteres apagados (ou trocados pela correção)
+    const text = v.slice(p).replace(/​/g, '');
+    last = v;
+    if (back || text) wsSend({ t: 'text', back, text, mods: takeMods() });
+    if (!composing) resetKb();
+  });
+  // Teclado físico (ou Bluetooth) ligado ao celular: teclas que não geram texto
+  const PHYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Escape: 'esc', Tab: 'tab',
+    Delete: 'delete', Home: 'home', End: 'end', PageUp: 'pageup', PageDown: 'pagedown', Insert: 'insert' };
+  kb.addEventListener('keydown', (e) => {
+    const name = PHYS[e.key] || (/^F([1-9]|1[0-2])$/.test(e.key) ? e.key.toLowerCase() : null);
+    if (!name) return;
+    e.preventDefault(); wsSend({ t: 'key', key: name, mods: takeMods() });
+  });
+
+  paintJoin();
+  paintStream();
 })();
 </script>
 <script src="/static/pwa.js" defer></script>
