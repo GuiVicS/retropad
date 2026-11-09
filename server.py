@@ -420,13 +420,13 @@ if __name__ == "__main__":
     if settings.ngrok:
         problems = tunnel.check_settings(settings)
         if problems:
-            raise SystemExit("[RetroPad] ngrok NÃO iniciado:\n  - " + "\n  - ".join(problems))
-        try:
-            url = tunnel.start(settings)
-        except tunnel.TunnelError as exc:
-            raise SystemExit(f"[RetroPad] ngrok falhou: {exc}")
-        app.config["RETROPAD_TUNNEL_URL"] = url
-        print(f"[RetroPad] ngrok: {url}  (instale o PWA por este endereço)")
-        if not settings.ngrok_allow_admin:
-            print("[RetroPad] ngrok: /admin só na rede local (RETROPAD_NGROK_ADMIN=1 para liberar)")
+            # Sem túnel (para não expor o controle com configuração fraca), mas a rede local continua funcionando.
+            print("[RetroPad] AVISO: ngrok NÃO iniciado, o controle segue só na rede local:\n  - " + "\n  - ".join(problems))
+        else:
+            def tunnel_ready(url):
+                app.config["RETROPAD_TUNNEL_URL"] = url
+                print(f"[RetroPad] ngrok: {url}  (instale o PWA por este endereço)")
+                if not settings.ngrok_allow_admin:
+                    print("[RetroPad] ngrok: /roms e /admin só na rede local (RETROPAD_NGROK_ADMIN=1 para liberar)")
+            threading.Thread(target=tunnel.open_forever, args=(settings, tunnel_ready), daemon=True).start()
     app.run(host=HOST, port=PORT, threaded=True)

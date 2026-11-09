@@ -181,3 +181,48 @@ def test_pages_link_pwa_assets(page):
     html = open(os.path.join(STATIC, page), encoding="utf-8").read()
     for needle in ('rel="manifest"', 'rel="apple-touch-icon"', "/static/pwa.js", "/static/theme.css", 'data-install'):
         assert needle in html, (page, needle)
+
+
+def test_token_already_saved_in_ngrok_config_is_not_an_error(tmp_path, monkeypatch):
+    # Caso real no Raspberry: o ngrok já tinha o token (ngrok config add-authtoken) e respondeu
+    # "Authtoken already set in configuration file", o que derrubava o servidor em loop.
+    class AlreadySet(FakeNgrok):
+        def set_auth_token(self, t):
+            raise RuntimeError("An error occurred when saving the auth token: b'Authtoken already set in configuration file: /home/pi/.ngrok2/ngrok.yml\\n'")
+    monkeypatch.delenv("NGROK_AUTHTOKEN", raising=False)
+    cfg = Settings(ngrok=True, ngrok_authtoken="tok123", url_file=str(tmp_path / "u.txt"))
+    fake = AlreadySet()
+    assert tunnel.start(cfg, ngrok=fake) == "https://abc.ngrok-free.app"
+    assert os.environ["NGROK_AUTHTOKEN"] == "tok123"          # também vai pelo ambiente
+    monkeypatch.delenv("NGROK_AUTHTOKEN", raising=False)
+
+
+def test_other_token_errors_are_reported_clearly(tmp_path):
+    class BadToken(FakeNgrok):
+        def set_auth_token(self, t): raise RuntimeError("invalid authtoken")
+    cfg = Settings(ngrok=True, ngrok_authtoken="tok", url_file=str(tmp_path / "u.txt"))
+    with pytest.raises(tunnel.TunnelError, match="authtoken do ngrok.*invalid authtoken"):
+        tunnel.start(cfg, ngrok=BadToken())
+
+
+def test_open_forever_retries_until_the_tunnel_comes_up():
+    attempts, sleeps, ready, logs = [], [], [], []
+    def flaky(cfg):
+        attempts.append(1)
+        if len(attempts) < 3: raise tunnel.TunnelError("sem rede")
+        return "https://ok.ngrok-free.app"
+    url = tunnel.open_forever(Settings(ngrok=True), ready.append, log=logs.append, sleep=sleeps.append, start_fn=flaky)
+    assert url == "https://ok.ngrok-free.app" and ready == [url]
+    assert sleeps == [30, 60]                           # espera cada vez mais, sem martelar
+    assert len(logs) == 2 and "rede local" in logs[0]
+
+
+def test_open_forever_survives_unexpected_errors_and_caps_the_wait():
+    calls = []
+    def boom(cfg):
+        calls.append(1)
+        if len(calls) < 12: raise ValueError("inesperado")
+        return "https://x.ngrok-free.app"
+    sleeps = []
+    tunnel.open_forever(Settings(ngrok=True), lambda u: None, log=lambda m: None, sleep=sleeps.append, start_fn=boom)
+    assert max(sleeps) == 300

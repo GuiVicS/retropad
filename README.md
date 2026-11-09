@@ -264,6 +264,10 @@ RETROPAD_NGROK_DOMAIN=meu-retropad.ngrok-free.app \
 
 Na primeira execução o `pyngrok` baixa o programa do ngrok, o que exige internet no Raspberry.
 
+**O ngrok nunca derruba o controle.** Se o túnel não puder abrir (PIN curto, token errado, Pi ligou antes do Wi-Fi), o servidor sobe do mesmo jeito na rede local, escreve o motivo no log (`journalctl -u retropad`) e, no caso de falha de rede ou de token, tenta abrir o túnel de novo em segundo plano (esperando 30 s, 60 s, ... até 5 min entre tentativas). Se o token já estiver salvo no ngrok (por exemplo, configurado antes com `ngrok config add-authtoken`), tudo bem: o servidor segue em frente.
+
+Se o log disser `Permission denied: .../logs/retropad.log`, a pasta `logs` ficou com dono `root` (acontece ao rodar o servidor com `sudo` na mão). Corrija com `sudo chown -R pi:pi ~/retropad/logs`.
+
 > **Segurança.** O túnel coloca o servidor na internet, o que o plano original proibia. Por isso, com `RETROPAD_NGROK=1`: o servidor **não sobe** se `RETROPAD_PIN` tiver menos de 6 caracteres; `/admin` e `/api` ficam **bloqueados pelo túnel** (só rede local) a menos que `RETROPAD_NGROK_ADMIN=1`, e nesse caso exige um `RETROPAD_ADMIN_PIN` diferente e com 6+ caracteres; e o bloqueio de tentativas conta pelo IP real do visitante. Mesmo assim, qualquer pessoa com o endereço e o PIN controla o seu jogo. Use PINs fortes e feche o túnel quando não precisar.
 >
 > O plano gratuito do ngrok mostra uma página de aviso na primeira visita ao navegador. Ela é ignorada pelo cache do app.

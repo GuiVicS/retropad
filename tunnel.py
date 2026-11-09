@@ -10,6 +10,7 @@ ATENÇÃO: isso expõe o servidor na internet. Por isso este módulo:
 """
 import atexit
 import os
+import time
 
 from flask import request
 
@@ -70,6 +71,23 @@ def install_guard(app, cfg):
         return None
 
 
+def _apply_token(ngrok, token):
+    """Entrega o authtoken ao ngrok.
+
+    Se o token já estiver salvo no arquivo de configuração do ngrok (por exemplo, configurado antes
+    pelo terminal), o ngrok responde "Authtoken already set" e o pyngrok trata isso como erro. Isso
+    não é problema: seguimos em frente e ainda passamos o token pelo ambiente (NGROK_AUTHTOKEN).
+    """
+    try:
+        ngrok.set_auth_token(token)
+    except Exception as exc:
+        text = str(exc)
+        if "already set" in text.lower():
+            os.environ["NGROK_AUTHTOKEN"] = token
+            return
+        raise TunnelError("não consegui salvar o authtoken do ngrok: " + text[:300])
+
+
 def start(cfg, ngrok=None):
     """Abre o túnel e devolve a URL pública. `ngrok` é injetável para testes."""
     if ngrok is None:
@@ -78,7 +96,7 @@ def start(cfg, ngrok=None):
         except ImportError:
             raise TunnelError("pyngrok não está instalado (pip install pyngrok)")
     if cfg.ngrok_authtoken:
-        ngrok.set_auth_token(cfg.ngrok_authtoken)
+        _apply_token(ngrok, cfg.ngrok_authtoken)
     options = {}
     if cfg.ngrok_domain:
         options["url"] = f"https://{cfg.ngrok_domain}"
@@ -92,6 +110,27 @@ def start(cfg, ngrok=None):
     atexit.register(stop, ngrok, cfg)
     _write_url(cfg, url)
     return url
+
+
+def open_forever(cfg, on_ready, log=print, sleep=time.sleep, start_fn=None, max_wait=300):
+    """Abre o túnel, tentando de novo enquanto falhar (ex.: o Pi ligou antes do Wi-Fi).
+
+    Roda em uma thread à parte: o servidor já atende na rede local enquanto isso, então um problema
+    com o ngrok nunca derruba o controle. Devolve a URL quando consegue.
+    """
+    start_fn = start_fn or start
+    attempt = 0
+    while True:
+        attempt += 1
+        try:
+            url = start_fn(cfg)
+        except Exception as exc:       # TunnelError e qualquer erro inesperado do pyngrok
+            wait = min(30 * attempt, max_wait)
+            log(f"[RetroPad] AVISO: ngrok falhou ({exc}). Nova tentativa em {wait}s; o controle segue na rede local.")
+            sleep(wait)
+            continue
+        on_ready(url)
+        return url
 
 
 def stop(ngrok, cfg):
